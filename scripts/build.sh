@@ -125,6 +125,8 @@ run_docker() {
         test)
             # shellcheck disable=SC2086
             "$docker_command" build $common_args \
+                --no-cache-filter test \
+                --progress plain \
                 --target test \
                 --file scripts/Dockerfile .
             ;;
