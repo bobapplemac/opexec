@@ -14,18 +14,57 @@ with credentials or using it on systems you administer.
 
 ## Build and validation
 
-The supported deployment target is Linux x64. Install the .NET 10 SDK to build
-from source; runtime use also requires the 1Password CLI (`op`) and, for `opssh`,
-OpenSSH (`ssh`) on `PATH`, with access to your configured 1Password account.
+The supported deployment target is Linux x64. Building requires Make plus either
+the .NET 10 SDK or Docker. Runtime use also requires the 1Password CLI (`op`) and,
+for `opssh`, OpenSSH (`ssh`) on `PATH`, with access to your configured 1Password
+account.
+
+On Linux, the usual build is:
+
+```sh
+make
+```
+
+This publishes the self-contained, single-file executable at
+`artifacts/publish/linux-x64/opexec`. Publishing means creating a deployable
+local artifact; it does not upload the binary or create a GitHub Release.
+
+The Make workflow automatically prefers a locally installed .NET 10 SDK so it
+benefits from the normal NuGet cache and has the shortest edit/build cycle. If
+the SDK is unavailable and Docker is installed, it uses the pinned SDK container
+instead. This selection applies to `make build`, `make test`, and `make publish`.
+The explicit `native-*` and `docker-*` targets can force either backend:
+
+```sh
+make publish BUILD_BACKEND=dotnet
+make publish BUILD_BACKEND=docker
+
+# Equivalent convenience targets:
+make native-publish
+make docker-publish
+```
+
+`BUILD_BACKEND` accepts `auto` (the default), `dotnet`, or `docker`, and can also
+be used with `make build` and `make test`.
+
+`make build` places compiler output under `artifacts/bin`; it is intermediate
+build output and is not the installable single-file executable. `make publish`
+and the Visual Studio `linux-x64` folder profile both place the deployable binary
+under `artifacts/publish/linux-x64`. Run `make help` for the complete target list.
+
+The Docker backend requires Docker BuildKit and network access to restore NuGet
+packages and pull the SDK image on its first run.
+
+The equivalent direct .NET commands, which remain suitable for Visual Studio
+and Windows development, are:
 
 ```sh
 dotnet restore OpExec.slnx
-dotnet build OpExec.slnx -c Release --no-restore
-dotnet test OpExec.slnx -c Release --no-build
+dotnet build OpExec.slnx -c Release --artifacts-path artifacts
+dotnet test OpExec.slnx -c Release --artifacts-path artifacts
 dotnet publish src/OpExec/OpExec.csproj -p:PublishProfile=linux-x64
 ```
 
-The executable is produced at `src/OpExec/bin/Publish/linux-x64/opexec`.
 Run validation on Linux as well: some platform-specific tests return early on
 other operating systems. See [test fixtures](tests/README.md) for scope and
 limitations.
@@ -36,11 +75,17 @@ The release is one self-contained executable. Install it system-wide (the defaul
 with:
 
 ```bash
-sudo ./opexec --install
+make install
 ```
 
-This copies the executable to `/usr/local/bin/opexec` and creates the `opshell` and
-`opssh` aliases. A per-user installation uses `$HOME/.local/bin` instead:
+This publishes the local binary, runs it with `sudo`, copies it to
+`/usr/local/bin/opexec`, and creates the `opshell` and `opssh` aliases. Remove the
+system installation with `make uninstall`. When already running as root, use
+`make install SUDO=` or `make uninstall SUDO=`.
+
+To install a previously published or downloaded binary directly, run
+`sudo ./opexec --install`. A per-user installation uses `$HOME/.local/bin`
+instead:
 
 ```bash
 ./opexec --install --user
