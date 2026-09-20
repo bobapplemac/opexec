@@ -52,11 +52,19 @@ docker-publish:
 
 install: publish
 	@test "$$(uname -s)" = Linux || { echo "System installation is supported only on Linux." >&2; exit 1; }
-	$(SUDO) "$(BINARY)" --install
+	@if [ "$$(id -u)" -eq 0 ]; then \
+		"$(BINARY)" --install; \
+	else \
+		$(SUDO) "$(BINARY)" --install; \
+	fi
 
 uninstall:
 	@test "$$(uname -s)" = Linux || { echo "System uninstallation is supported only on Linux." >&2; exit 1; }
-	$(SUDO) opexec --uninstall
+	@if [ "$$(id -u)" -eq 0 ]; then \
+		opexec --uninstall; \
+	else \
+		$(SUDO) opexec --uninstall; \
+	fi
 
 clean:
 	$(SHELL) "$(BUILD_SCRIPT)" clean
@@ -80,4 +88,4 @@ help:
 	@echo "The native-publish and docker-publish convenience targets are equivalent shortcuts."
 	@echo "Publishing creates a local artifact; it does not upload a GitHub Release."
 	@echo "Override tools/settings with DOTNET, DOCKER, SUDO, CONFIGURATION, or PUBLISH_PROFILE."
-	@echo "Example: make install SUDO=   # when already running as root"
+	@echo "Install and uninstall use sudo for non-root users and skip it automatically for root."

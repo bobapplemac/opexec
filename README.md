@@ -78,10 +78,10 @@ with:
 make install
 ```
 
-This publishes the local binary, runs it with `sudo`, copies it to
-`/usr/local/bin/opexec`, and creates the `opshell` and `opssh` aliases. Remove the
-system installation with `make uninstall`. When already running as root, use
-`make install SUDO=` or `make uninstall SUDO=`.
+This publishes the local binary, installs it as `/usr/local/bin/opexec`, and
+creates the `opshell` and `opssh` aliases. Remove the system installation with
+`make uninstall`. The Makefile uses `sudo` for a non-root user and automatically
+runs the command directly when already root.
 
 To install a previously published or downloaded binary directly, run
 `sudo ./opexec --install`. A per-user installation uses `$HOME/.local/bin`
