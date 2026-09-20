@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OpExec/OpExec.csproj" />
+    <Project Path="src/OpExec.OnePassword/OpExec.OnePassword.csproj" />
+    <Project Path="src/OpExec.SshAgent/OpExec.SshAgent.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OpExec.Tests/OpExec.Tests.csproj" />
+    <Project Path="tests/OpExec.OnePassword.Tests/OpExec.OnePassword.Tests.csproj" />
+    <Project Path="tests/OpExec.SshAgent.Tests/OpExec.SshAgent.Tests.csproj" />
+  </Folder>
+</Solution>
