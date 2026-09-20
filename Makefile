@@ -5,7 +5,6 @@ SHELL := /bin/sh
 BUILD_BACKEND ?= auto
 DOTNET ?= dotnet
 DOCKER ?= docker
-SUDO ?= sudo
 CONFIGURATION ?= Release
 PUBLISH_PROFILE ?= linux-x64
 DOTNET_SDK_IMAGE ?= mcr.microsoft.com/dotnet/sdk:10.0.401-noble
@@ -50,21 +49,14 @@ docker-test:
 docker-publish:
 	BUILD_BACKEND=docker $(SHELL) "$(BUILD_SCRIPT)" publish
 
-install: publish
+install:
 	@test "$$(uname -s)" = Linux || { echo "System installation is supported only on Linux." >&2; exit 1; }
-	@if [ "$$(id -u)" -eq 0 ]; then \
-		"$(BINARY)" --install; \
-	else \
-		$(SUDO) "$(BINARY)" --install; \
-	fi
+	@test -f "$(BINARY)" || { echo "$(BINARY) does not exist; run make first." >&2; exit 1; }
+	"$(BINARY)" --install
 
 uninstall:
 	@test "$$(uname -s)" = Linux || { echo "System uninstallation is supported only on Linux." >&2; exit 1; }
-	@if [ "$$(id -u)" -eq 0 ]; then \
-		opexec --uninstall; \
-	else \
-		$(SUDO) opexec --uninstall; \
-	fi
+	opexec --uninstall
 
 clean:
 	$(SHELL) "$(BUILD_SCRIPT)" clean
@@ -76,8 +68,8 @@ help:
 	@echo "  make build           Compile the solution into artifacts/bin"
 	@echo "  make test            Build and run the test suite"
 	@echo "  make publish         Create the local deployable binary in artifacts/publish"
-	@echo "  make install         Publish, then install system-wide with sudo"
-	@echo "  make uninstall       Uninstall the system-wide command with sudo"
+	@echo "  make install         Install an existing published binary system-wide"
+	@echo "  make uninstall       Uninstall the system-wide command"
 	@echo "  make clean           Remove artifacts plus project-local bin/obj outputs"
 	@echo "  make help            Show this help"
 	@echo
@@ -87,5 +79,5 @@ help:
 	@echo "          make publish BUILD_BACKEND=docker"
 	@echo "The native-publish and docker-publish convenience targets are equivalent shortcuts."
 	@echo "Publishing creates a local artifact; it does not upload a GitHub Release."
-	@echo "Override tools/settings with DOTNET, DOCKER, SUDO, CONFIGURATION, or PUBLISH_PROFILE."
-	@echo "Install and uninstall use sudo for non-root users and skip it automatically for root."
+	@echo "Override tools/settings with DOTNET, DOCKER, CONFIGURATION, or PUBLISH_PROFILE."
+	@echo "For a system install, use: make && sudo make install"

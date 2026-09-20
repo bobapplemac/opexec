@@ -71,17 +71,24 @@ limitations.
 
 ## Installation and usage
 
-The release is one self-contained executable. Install it system-wide (the default)
-with:
+The release is one self-contained executable. Build and install it system-wide
+with the traditional Make workflow:
 
 ```bash
-make install
+make
+sudo make install
 ```
 
-This publishes the local binary, installs it as `/usr/local/bin/opexec`, and
-creates the `opshell` and `opssh` aliases. Remove the system installation with
-`make uninstall`. The Makefile uses `sudo` for a non-root user and automatically
-runs the command directly when already root.
+The unprivileged `make` step publishes the local binary. The privileged install
+step copies it to `/usr/local/bin/opexec` and creates the `opshell` and `opssh`
+aliases without rebuilding. Remove the system installation with:
+
+```bash
+sudo make uninstall
+```
+
+The Makefile does not invoke `sudo`; privilege elevation remains under the
+user's control.
 
 To install a previously published or downloaded binary directly, run
 `sudo ./opexec --install`. A per-user installation uses `$HOME/.local/bin`
