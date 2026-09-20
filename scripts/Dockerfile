@@ -22,7 +22,6 @@ FROM source AS build
 ARG CONFIGURATION=Release
 RUN dotnet build OpExec.slnx \
     --configuration ${CONFIGURATION} \
-    --no-restore \
     --artifacts-path /artifacts
 
 FROM scratch AS build-artifact
@@ -32,7 +31,6 @@ FROM source AS test
 ARG CONFIGURATION=Release
 RUN dotnet test OpExec.slnx \
     --configuration ${CONFIGURATION} \
-    --no-restore \
     --artifacts-path /artifacts
 
 FROM source AS publish
