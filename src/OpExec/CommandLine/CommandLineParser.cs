@@ -4,8 +4,8 @@
 //
 // ------------------------------------------------------------------------------------------
 // File:        CommandLineParser.cs
-// Revision:    r5
-// Modified:    2026-09-19
+// Revision:    r6
+// Modified:    2026-09-20
 // Author:      Andrew J. Moore
 // License:     MIT License
 // Source:      https://github.com/bobapplemac/opexec
@@ -101,7 +101,10 @@ namespace OpExec
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(invocationPath);
 
-            var fileName = Path.GetFileName(invocationPath);
+            var separatorIndex = Math.Max(
+                invocationPath.LastIndexOf('/'),
+                invocationPath.LastIndexOf('\\'));
+            var fileName = invocationPath[(separatorIndex + 1)..];
 
             if (fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
