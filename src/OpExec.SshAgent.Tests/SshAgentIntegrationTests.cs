@@ -26,12 +26,13 @@ namespace OpExec.SshAgent.Tests
             try
             {
                 await using (var agent = await SshAgent.StartAsync(
-                    new SshAgentOptions
-                    {
-                        RuntimeBaseDirectory = testRoot,
-                        RuntimeDirectoryName = "a",
-                        IdentityProvider = new TestIdentityProvider()
-                    }))
+                                 new SshAgentOptions
+                                 {
+                                     RuntimeBaseDirectory = testRoot,
+                                     RuntimeDirectoryName = "a",
+                                     IdentityProvider = new TestIdentityProvider()
+                                 },
+                                 TestContext.Current.CancellationToken))
                 {
                     runtimeDirectory = System.IO.Path.GetDirectoryName(agent.SocketPath);
                     Assert.True(Directory.Exists(runtimeDirectory));
@@ -52,7 +53,9 @@ namespace OpExec.SshAgent.Tests
                         AddressFamily.Unix,
                         SocketType.Stream,
                         ProtocolType.Unspecified);
-                    await client.ConnectAsync(new UnixDomainSocketEndPoint(agent.SocketPath));
+                    await client.ConnectAsync(
+                        new UnixDomainSocketEndPoint(agent.SocketPath),
+                        TestContext.Current.CancellationToken);
                     await using var stream = new NetworkStream(client, ownsSocket: false);
 
                     await AgentPacket.WriteAsync(
@@ -96,11 +99,14 @@ namespace OpExec.SshAgent.Tests
                                ProtocolType.Unspecified))
                     {
                         await emptyPacketClient.ConnectAsync(
-                            new UnixDomainSocketEndPoint(agent.SocketPath));
+                            new UnixDomainSocketEndPoint(agent.SocketPath),
+                            TestContext.Current.CancellationToken);
                         await using var emptyPacketStream = new NetworkStream(
                             emptyPacketClient,
                             ownsSocket: false);
-                        await emptyPacketStream.WriteAsync(new byte[sizeof(uint)]);
+                        await emptyPacketStream.WriteAsync(
+                            new byte[sizeof(uint)],
+                            TestContext.Current.CancellationToken);
                     }
 
                     await SendUnsupportedRequestAsync(agent.SocketPath);
@@ -111,7 +117,8 @@ namespace OpExec.SshAgent.Tests
                                ProtocolType.Unspecified))
                     {
                         await malformedClient.ConnectAsync(
-                            new UnixDomainSocketEndPoint(agent.SocketPath));
+                            new UnixDomainSocketEndPoint(agent.SocketPath),
+                            TestContext.Current.CancellationToken);
                         await using var malformedStream = new NetworkStream(
                             malformedClient,
                             ownsSocket: false);
@@ -119,7 +126,9 @@ namespace OpExec.SshAgent.Tests
                         BinaryPrimitives.WriteUInt32BigEndian(
                             oversizedHeader,
                             SshAgentOptions.DefaultMaximumPacketLength + 1U);
-                        await malformedStream.WriteAsync(oversizedHeader);
+                        await malformedStream.WriteAsync(
+                            oversizedHeader,
+                            TestContext.Current.CancellationToken);
                     }
 
                     await SendUnsupportedRequestAsync(agent.SocketPath);
@@ -164,7 +173,8 @@ namespace OpExec.SshAgent.Tests
                         RuntimeDirectoryName = "a",
                         MaximumPacketLength = 32,
                         IdentityProvider = new TestIdentityProvider()
-                    });
+                    },
+                    TestContext.Current.CancellationToken);
 
                 await AssertRequestReturnsFailureAsync(
                     agent.SocketPath,
@@ -213,7 +223,8 @@ namespace OpExec.SshAgent.Tests
                         RuntimeDirectoryName = "a",
                         IdentityProvider = new FailingIdentityProvider(),
                         Log = logs.Add
-                    });
+                    },
+                    TestContext.Current.CancellationToken);
 
                 await AssertRequestReturnsFailureAsync(
                     agent.SocketPath,
@@ -270,10 +281,12 @@ namespace OpExec.SshAgent.Tests
                                     "runtime directory created:",
                                     StringComparison.Ordinal))
                                 {
-                                    throw new InvalidOperationException("test startup failure");
+                                    throw new InvalidOperationException(
+                                        "test startup failure");
                                 }
                             }
-                        }));
+                        },
+                        TestContext.Current.CancellationToken));
 
                 var agentRoot = System.IO.Path.Combine(testRoot, "a");
                 Assert.Empty(Directory.EnumerateFileSystemEntries(agentRoot));
@@ -319,10 +332,12 @@ namespace OpExec.SshAgent.Tests
                         {
                             if (message == "agent server stopped")
                             {
-                                throw new InvalidOperationException("test shutdown failure");
+                                throw new InvalidOperationException(
+                                    "test shutdown failure");
                             }
                         }
-                    });
+                    },
+                    TestContext.Current.CancellationToken);
                 runtimeDirectory = System.IO.Path.GetDirectoryName(agent.SocketPath);
 
                 await Assert.ThrowsAsync<InvalidOperationException>(

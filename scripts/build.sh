@@ -131,7 +131,7 @@ run_dotnet() {
                 --artifacts-path "$artifacts_dir"
             ;;
         test)
-            "$dotnet_command" test src/OpExec.slnx \
+            "$dotnet_command" test --solution src/OpExec.slnx \
                 --configuration "$configuration" \
                 --artifacts-path "$artifacts_dir"
             ;;

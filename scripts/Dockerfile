@@ -20,6 +20,7 @@ FROM ${DOTNET_SDK_IMAGE} AS restore
 
 WORKDIR /source
 
+COPY global.json ./
 COPY src/Directory.Build.props src/OpExec.slnx src/
 COPY src/OpExec/OpExec.csproj src/OpExec/
 COPY src/OpExec.OnePassword/OpExec.OnePassword.csproj src/OpExec.OnePassword/
@@ -44,7 +45,7 @@ COPY --from=build /artifacts/ /
 
 FROM source AS test
 ARG CONFIGURATION=Release
-RUN dotnet test src/OpExec.slnx \
+RUN dotnet test --solution src/OpExec.slnx \
     --configuration ${CONFIGURATION} \
     --artifacts-path /artifacts
 

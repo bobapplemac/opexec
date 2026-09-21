@@ -36,7 +36,10 @@ namespace OpExec.OnePassword.Tests
             var client = new OnePasswordClient(new OnePasswordClientOptions(), runner);
             var logs = new List<string>();
 
-            var provider = await OnePasswordIdentityProvider.CreateAsync(client, logs.Add);
+            var provider = await OnePasswordIdentityProvider.CreateAsync(
+                client,
+                logs.Add,
+                TestContext.Current.CancellationToken);
             var invocationCountAfterDiscovery = runner.Invocations.Count;
             var firstRead = await provider.GetIdentitiesAsync(CancellationToken.None);
             var secondRead = await provider.GetIdentitiesAsync(CancellationToken.None);
@@ -69,7 +72,8 @@ namespace OpExec.OnePassword.Tests
             var logs = new List<string>();
             var provider = await OnePasswordIdentityProvider.CreateAsync(
                 new OnePasswordClient(new OnePasswordClientOptions(), runner),
-                logs.Add);
+                logs.Add,
+                TestContext.Current.CancellationToken);
             var identity = Assert.Single(
                 await provider.GetIdentitiesAsync(CancellationToken.None));
             var data = "milestone 6 signing"u8.ToArray();
@@ -109,7 +113,8 @@ namespace OpExec.OnePassword.Tests
             var mismatchedPrivateKey = OpenSshTestKey.CreatePrivateKeyBytes();
             runner.EnqueueSecretResult(0, mismatchedPrivateKey);
             var provider = await OnePasswordIdentityProvider.CreateAsync(
-                new OnePasswordClient(new OnePasswordClientOptions(), runner));
+                new OnePasswordClient(new OnePasswordClientOptions(), runner),
+                cancellationToken: TestContext.Current.CancellationToken);
             var identity = Assert.Single(
                 await provider.GetIdentitiesAsync(CancellationToken.None));
 

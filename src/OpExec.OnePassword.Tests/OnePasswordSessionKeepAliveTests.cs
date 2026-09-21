@@ -40,10 +40,15 @@ namespace OpExec.OnePassword.Tests
                 null,
                 TestInterval,
                 TestInterval,
-                3);
+                3,
+                TestContext.Current.CancellationToken);
 
-            await heartbeatObserved.Task.WaitAsync(TimeSpan.FromSeconds(2));
-            await heartbeatLogged.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await heartbeatObserved.Task.WaitAsync(
+                TimeSpan.FromSeconds(2),
+                TestContext.Current.CancellationToken);
+            await heartbeatLogged.Task.WaitAsync(
+                TimeSpan.FromSeconds(2),
+                TestContext.Current.CancellationToken);
 
             Assert.True(keepAlive.IsEnabled);
             Assert.True(Volatile.Read(ref heartbeatCount) >= 1);
@@ -68,9 +73,12 @@ namespace OpExec.OnePassword.Tests
                 invalidated.SetResult,
                 TestInterval,
                 TestInterval,
-                3);
+                3,
+                TestContext.Current.CancellationToken);
 
-            await invalidated.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await invalidated.Task.WaitAsync(
+                TimeSpan.FromSeconds(2),
+                TestContext.Current.CancellationToken);
 
             Assert.Equal(3, Volatile.Read(ref heartbeatCount));
             Assert.Contains(
@@ -95,9 +103,12 @@ namespace OpExec.OnePassword.Tests
                 invalidated.SetResult,
                 TestInterval,
                 TestInterval,
-                3);
+                3,
+                TestContext.Current.CancellationToken);
 
-            await invalidated.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await invalidated.Task.WaitAsync(
+                TimeSpan.FromSeconds(2),
+                TestContext.Current.CancellationToken);
 
             Assert.Empty(results);
             Assert.Contains("1Password session keepalive recovered", logs);
@@ -118,9 +129,12 @@ namespace OpExec.OnePassword.Tests
                 null,
                 TestInterval,
                 TestInterval,
-                3);
+                3,
+                TestContext.Current.CancellationToken);
 
-            await Task.Delay(TimeSpan.FromMilliseconds(25));
+            await Task.Delay(
+                TimeSpan.FromMilliseconds(25),
+                TestContext.Current.CancellationToken);
 
             Assert.False(keepAlive.IsEnabled);
             Assert.Equal(0, Volatile.Read(ref heartbeatCount));

@@ -17,7 +17,7 @@ namespace OpExec.OnePassword.Tests
                 runner,
                 new Dictionary<string, string?> { ["OP_ACCOUNT"] = "account-id" });
 
-            var version = await client.GetVersionAsync();
+            var version = await client.GetVersionAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal("2.34.0", version);
             var invocation = Assert.Single(runner.Invocations);
@@ -39,7 +39,7 @@ namespace OpExec.OnePassword.Tests
                 runner,
                 new Dictionary<string, string?> { ["OP_SESSION"] = "session-token" });
 
-            var authenticated = await client.IsAuthenticatedAsync();
+            var authenticated = await client.IsAuthenticatedAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(expected, authenticated);
             var invocation = Assert.Single(runner.Invocations);
@@ -64,7 +64,7 @@ namespace OpExec.OnePassword.Tests
                     ["OP_SESSION_user-id"] = "session-token"
                 });
 
-            var succeeded = await client.KeepSessionAliveAsync();
+            var succeeded = await client.KeepSessionAliveAsync(TestContext.Current.CancellationToken);
 
             Assert.Equal(expected, succeeded);
             var invocation = Assert.Single(runner.Invocations);
@@ -99,7 +99,7 @@ namespace OpExec.OnePassword.Tests
                 });
 
             var exception = await Assert.ThrowsAsync<OnePasswordHeartbeatException>(
-                () => client.KeepSessionAliveWithDiagnosticsAsync());
+                () => client.KeepSessionAliveWithDiagnosticsAsync(TestContext.Current.CancellationToken));
 
             Assert.Contains("op vault list exited with code 1", exception.Message);
             Assert.Contains("[REDACTED]", exception.Message);
@@ -124,7 +124,7 @@ namespace OpExec.OnePassword.Tests
                 """);
             var client = CreateClient(runner);
 
-            var accounts = await client.ListAccountsAsync();
+            var accounts = await client.ListAccountsAsync(TestContext.Current.CancellationToken);
 
             Assert.Collection(
                 accounts,
@@ -173,7 +173,7 @@ namespace OpExec.OnePassword.Tests
                 """);
             var client = CreateClient(runner);
 
-            var items = await client.ListSshKeyItemsAsync();
+            var items = await client.ListSshKeyItemsAsync(TestContext.Current.CancellationToken);
 
             Assert.Collection(
                 items,
@@ -205,7 +205,7 @@ namespace OpExec.OnePassword.Tests
             var client = CreateClient(runner);
             var item = new OnePasswordItem("vault-id", "item-id", "Test key");
 
-            var publicKey = await client.GetPublicKeyAsync(item);
+            var publicKey = await client.GetPublicKeyAsync(item, TestContext.Current.CancellationToken);
 
             Assert.Equal("ssh-ed25519 AAAA", publicKey);
             Assert.Equal(
@@ -232,7 +232,7 @@ namespace OpExec.OnePassword.Tests
             var client = CreateClient(runner);
 
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => client.ListSshKeyItemsAsync());
+                () => client.ListSshKeyItemsAsync(TestContext.Current.CancellationToken));
 
             Assert.Contains("exit code 1", exception.Message);
             Assert.DoesNotContain("secret stdout", exception.Message);
@@ -248,7 +248,7 @@ namespace OpExec.OnePassword.Tests
             var client = CreateClient(runner);
             var item = new OnePasswordItem("vault-id", "item-id", "Test key");
 
-            using (var privateKey = await client.GetPrivateKeyAsync(item))
+            using (var privateKey = await client.GetPrivateKeyAsync(item, TestContext.Current.CancellationToken))
             {
                 Assert.Equal("private key material"u8.ToArray(), privateKey.Span.ToArray());
             }
@@ -274,7 +274,7 @@ namespace OpExec.OnePassword.Tests
             var item = new OnePasswordItem("vault-id", "item-id", "Test key");
 
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => client.GetPrivateKeyAsync(item));
+                () => client.GetPrivateKeyAsync(item, TestContext.Current.CancellationToken));
 
             Assert.Contains("exit code 1", exception.Message);
             Assert.DoesNotContain("partial secret", exception.Message);
@@ -291,7 +291,7 @@ namespace OpExec.OnePassword.Tests
             var client = CreateClient(runner);
 
             await Assert.ThrowsAsync<InvalidDataException>(
-                () => client.ListSshKeyItemsAsync());
+                () => client.ListSshKeyItemsAsync(TestContext.Current.CancellationToken));
         }
 
         private static OnePasswordClient CreateClient(
