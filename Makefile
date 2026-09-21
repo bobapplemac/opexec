@@ -12,10 +12,11 @@ DOTNET_SDK_IMAGE ?= mcr.microsoft.com/dotnet/sdk:10.0.401-noble
 export BUILD_BACKEND DOTNET DOCKER CONFIGURATION PUBLISH_PROFILE DOTNET_SDK_IMAGE
 
 BUILD_SCRIPT := scripts/build.sh
+RELEASE_SCRIPT := scripts/release.sh
 BINARY := artifacts/publish/linux-x64/opexec
 
 .PHONY: all build clean docker-build docker-publish docker-test help install \
-	native-build native-publish native-test publish restore test uninstall
+	native-build native-publish native-test publish release restore test uninstall
 
 all: publish
 
@@ -30,6 +31,9 @@ test:
 
 publish:
 	$(SHELL) "$(BUILD_SCRIPT)" publish
+
+release:
+	$(SHELL) "$(RELEASE_SCRIPT)"
 
 native-build:
 	BUILD_BACKEND=dotnet $(SHELL) "$(BUILD_SCRIPT)" build
@@ -68,6 +72,7 @@ help:
 	@echo "  make build           Compile the solution into artifacts/bin"
 	@echo "  make test            Build and run the test suite"
 	@echo "  make publish         Create the local deployable binary in artifacts/publish"
+	@echo "  make release         Test, package, and publish an immutable GitHub Release"
 	@echo "  make install         Install an existing published binary system-wide"
 	@echo "  make uninstall       Uninstall the system-wide command"
 	@echo "  make clean           Remove artifacts plus project-local bin/obj outputs"
@@ -79,5 +84,6 @@ help:
 	@echo "          make publish BUILD_BACKEND=docker"
 	@echo "The native-publish and docker-publish convenience targets are equivalent shortcuts."
 	@echo "Publishing creates a local artifact; it does not upload a GitHub Release."
+	@echo "Releasing requires GitHub CLI authentication from gh auth login or GH_TOKEN."
 	@echo "Override tools/settings with DOTNET, DOCKER, CONFIGURATION, or PUBLISH_PROFILE."
 	@echo "For a system install, use: make && sudo make install"

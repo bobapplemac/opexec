@@ -52,6 +52,27 @@ build output and is not the installable single-file executable. `make publish`
 and the Visual Studio `linux-x64` folder profile both place the deployable binary
 under `artifacts/publish/linux-x64`. Run `make help` for the complete target list.
 
+## GitHub releases
+
+`publish` retains its standard .NET meaning: it creates a local deployable
+application. Creating a public GitHub Release is a separate, explicit operation:
+
+```sh
+gh auth login
+make release
+```
+
+`make release` requires a clean Linux checkout whose `HEAD` exactly matches
+`origin/main`. It runs the complete test suite, publishes the Linux x64 binary,
+packages it as `artifacts/release/opexec-rN-linux-x64.tar.gz`, writes a SHA-256
+checksum beside it, and creates the corresponding `rN` Git tag and GitHub
+Release using the revision in `src/Directory.Build.props`. `GH_TOKEN` may be
+used instead of an interactive `gh auth login` session.
+
+Published revisions are immutable. The release command refuses to replace an
+existing tag or GitHub Release; increment `ProductRevision` for a subsequent
+release.
+
 The Docker backend requires Docker BuildKit and network access to restore NuGet
 packages and pull the SDK image on its first run.
 
