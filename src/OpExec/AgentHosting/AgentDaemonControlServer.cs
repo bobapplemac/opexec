@@ -4,8 +4,8 @@
 //
 // ------------------------------------------------------------------------------------------
 // File:        AgentDaemonControlServer.cs
-// Revision:    r3
-// Modified:    2026-09-19
+// Revision:    r13
+// Modified:    2026-09-21
 // Author:      Andrew J. Moore
 // License:     MIT License
 // Source:      https://github.com/bobapplemac/opexec
@@ -13,6 +13,7 @@
 //              opssh agents through the bounded length-framed JSON-RPC protocol.
 // ------------------------------------------------------------------------------------------
 
+using System.Collections.Concurrent;
 using System.Net.Sockets;
 
 namespace OpExec
@@ -22,8 +23,11 @@ namespace OpExec
         private readonly string _socketPath;
         private readonly Socket _listener;
         private readonly CancellationTokenSource _shutdown = new();
+        private readonly CancellationTokenSource _lifetime;
+        private readonly ConcurrentDictionary<long, Task> _clients = new();
         private readonly Task _acceptLoop;
         private bool _disposed;
+        private long _nextClientId;
 
         private AgentDaemonControlServer(
             string socketPath,
@@ -34,10 +38,10 @@ namespace OpExec
         {
             _socketPath = socketPath;
             _listener = listener;
-            var lifetime = CancellationTokenSource.CreateLinkedTokenSource(
+            _lifetime = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken,
                 _shutdown.Token);
-            _acceptLoop = AcceptLoopAsync(listener, stop, log, lifetime);
+            _acceptLoop = AcceptLoopAsync(stop, log);
         }
 
         public static AgentDaemonControlServer Start(
@@ -91,6 +95,7 @@ namespace OpExec
             try
             {
                 await _acceptLoop;
+                await Task.WhenAll(_clients.Values);
             }
             catch (OperationCanceledException)
             {
@@ -98,41 +103,48 @@ namespace OpExec
             finally
             {
                 _shutdown.Dispose();
+                _lifetime.Dispose();
                 TryDeleteSocket(_socketPath);
             }
         }
 
-        private static async Task AcceptLoopAsync(
-            Socket listener,
+        private async Task AcceptLoopAsync(
             Action stop,
-            Action<string>? log,
-            CancellationTokenSource lifetime)
+            Action<string>? log)
         {
-            using (lifetime)
+            while (!_lifetime.IsCancellationRequested)
             {
-                while (!lifetime.IsCancellationRequested)
+                Socket client;
+
+                try
                 {
-                    Socket client;
-
-                    try
-                    {
-                        client = await listener.AcceptAsync(lifetime.Token);
-                    }
-                    catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
-                    {
-                        break;
-                    }
-                    catch (ObjectDisposedException) when (lifetime.IsCancellationRequested)
-                    {
-                        break;
-                    }
-                    catch (SocketException) when (lifetime.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
-                    _ = HandleClientAsync(client, stop, log, lifetime.Token);
+                    client = await _listener.AcceptAsync(_lifetime.Token);
                 }
+                catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (ObjectDisposedException) when (_lifetime.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (SocketException) when (_lifetime.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                var clientId = Interlocked.Increment(ref _nextClientId);
+                var clientTask = HandleClientAsync(
+                    client,
+                    stop,
+                    log,
+                    _lifetime.Token);
+                _clients[clientId] = clientTask;
+                _ = clientTask.ContinueWith(
+                    completedTask => _clients.TryRemove(clientId, out _),
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
             }
         }
 
@@ -207,6 +219,11 @@ namespace OpExec
                 catch (SocketException exception)
                 {
                     log?.Invoke($"daemon control socket ended: {exception.Message}");
+                }
+                catch (Exception exception)
+                {
+                    log?.Invoke(
+                        $"daemon control request failed: {exception.GetType().Name}");
                 }
                 finally
                 {

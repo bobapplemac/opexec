@@ -1,5 +1,20 @@
 # syntax=docker/dockerfile:1
 
+# SPDX-FileCopyrightText: © 2026 Andrew J. Moore
+# SPDX-FileContributor: Andrew J. Moore
+# SPDX-License-Identifier: MIT
+#
+# ------------------------------------------------------------------------------------------
+# File:        scripts/Dockerfile
+# Revision:    r13
+# Modified:    2026-09-21
+# Author:      Andrew J. Moore
+# License:     MIT License
+# Source:      https://github.com/bobapplemac/opexec
+# Description: Defines cached .NET restore, build, test, and Linux x64 single-file publish
+#              stages used by the optional Docker build backend.
+# ------------------------------------------------------------------------------------------
+
 ARG DOTNET_SDK_IMAGE=mcr.microsoft.com/dotnet/sdk:10.0.401-noble
 FROM ${DOTNET_SDK_IMAGE} AS restore
 

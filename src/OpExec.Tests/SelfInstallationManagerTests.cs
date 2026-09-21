@@ -53,10 +53,9 @@ namespace OpExec.Tests
         [Fact]
         public void InstallAndUninstallManageOneExecutableAndTwoAliases()
         {
-            if (!OperatingSystem.IsLinux())
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                OperatingSystem.IsLinux(),
+                "Self-installation integration requires Linux filesystem semantics.");
 
             using var fixture = new InstallationFixture();
 

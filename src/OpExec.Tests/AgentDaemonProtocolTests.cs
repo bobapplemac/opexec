@@ -4,6 +4,7 @@
 
 using System.Buffers.Binary;
 using System.Net.Sockets;
+using System.Runtime.Versioning;
 using System.Text;
 using Xunit;
 
@@ -113,7 +114,7 @@ namespace OpExec.Tests
             await AgentDaemonControlProtocol.WriteFrameAsync(
                 stream,
                 message,
-                CancellationToken.None);
+                TestContext.Current.CancellationToken);
 
             var framed = stream.ToArray();
             Assert.Equal(
@@ -122,8 +123,64 @@ namespace OpExec.Tests
             stream.Position = 0;
             var decoded = await AgentDaemonControlProtocol.ReadFrameAsync(
                 stream,
-                CancellationToken.None);
+                TestContext.Current.CancellationToken);
             Assert.Equal(message, decoded);
+        }
+
+        [Fact]
+        public async Task ControlProtocolReadsFragmentedPrefixAndPayload()
+        {
+            var message = AgentDaemonControlProtocol.CreateStopRequest();
+            await using var encoded = new MemoryStream();
+            await AgentDaemonControlProtocol.WriteFrameAsync(
+                encoded,
+                message,
+                TestContext.Current.CancellationToken);
+            await using var fragmented = new FragmentedReadStream(
+                encoded.ToArray());
+
+            var decoded = await AgentDaemonControlProtocol.ReadFrameAsync(
+                fragmented,
+                TestContext.Current.CancellationToken);
+
+            Assert.Equal(message, decoded);
+        }
+
+        [Fact]
+        public async Task ControlProtocolRejectsZeroLengthFrame()
+        {
+            await using var stream = new MemoryStream(new byte[4]);
+
+            await Assert.ThrowsAsync<InvalidDataException>(
+                () => AgentDaemonControlProtocol.ReadFrameAsync(
+                    stream,
+                    TestContext.Current.CancellationToken));
+        }
+
+        [Fact]
+        public async Task ControlProtocolRejectsTruncatedPrefix()
+        {
+            await using var stream = new MemoryStream(new byte[] { 0, 0, 0 });
+
+            await Assert.ThrowsAsync<EndOfStreamException>(
+                () => AgentDaemonControlProtocol.ReadFrameAsync(
+                    stream,
+                    TestContext.Current.CancellationToken));
+        }
+
+        [Fact]
+        public async Task ControlProtocolRejectsTruncatedPayload()
+        {
+            var frame = new byte[6];
+            BinaryPrimitives.WriteUInt32BigEndian(frame, 3);
+            frame[4] = (byte)'{';
+            frame[5] = (byte)'}';
+            await using var stream = new MemoryStream(frame);
+
+            await Assert.ThrowsAsync<EndOfStreamException>(
+                () => AgentDaemonControlProtocol.ReadFrameAsync(
+                    stream,
+                    TestContext.Current.CancellationToken));
         }
 
         [Fact]
@@ -136,7 +193,7 @@ namespace OpExec.Tests
             await Assert.ThrowsAsync<InvalidDataException>(
                 () => AgentDaemonControlProtocol.ReadFrameAsync(
                     stream,
-                    CancellationToken.None));
+                    TestContext.Current.CancellationToken));
         }
 
         [Fact]
@@ -149,6 +206,30 @@ namespace OpExec.Tests
             var wrongId = AgentDaemonControlProtocol.CreateSuccessResponse(2);
             Assert.Throws<InvalidDataException>(
                 () => AgentDaemonControlProtocol.ValidateSuccessResponse(wrongId));
+        }
+
+        [Fact]
+        public void ControlProtocolRejectsInvalidUtf8Json()
+        {
+            var parsed = AgentDaemonControlProtocol.ParseStopRequest(
+                new byte[] { 0xff });
+
+            Assert.False(parsed.ShouldStop);
+            Assert.Equal(-32700, parsed.ErrorCode);
+        }
+
+        [Fact]
+        public void ControlProtocolSurfacesJsonRpcErrorResponse()
+        {
+            var response = AgentDaemonControlProtocol.CreateErrorResponse(
+                1,
+                -32601,
+                "Method not found");
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => AgentDaemonControlProtocol.ValidateSuccessResponse(response));
+
+            Assert.Contains("Method not found", exception.Message);
         }
 
         [Fact]
@@ -167,12 +248,12 @@ namespace OpExec.Tests
         }
 
         [Fact]
+        [SupportedOSPlatform("linux")]
         public async Task ControlServerAcceptsStopAndRemovesItsSocket()
         {
-            if (!OperatingSystem.IsLinux())
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                OperatingSystem.IsLinux(),
+                "Daemon control integration requires Linux Unix-domain sockets.");
 
             var directory = Path.Combine(
                 Path.GetTempPath(),
@@ -189,7 +270,7 @@ namespace OpExec.Tests
                                  agentSocketPath,
                                  () => stopped.TrySetResult(),
                                  null,
-                                 CancellationToken.None))
+                                 TestContext.Current.CancellationToken))
                 {
                     Assert.Equal(
                         UnixFileMode.UserRead | UnixFileMode.UserWrite,
@@ -200,7 +281,8 @@ namespace OpExec.Tests
                         SocketType.Stream,
                         ProtocolType.Unspecified);
                     await client.ConnectAsync(
-                        new UnixDomainSocketEndPoint(controlSocketPath));
+                        new UnixDomainSocketEndPoint(controlSocketPath),
+                        TestContext.Current.CancellationToken);
                     await using var stream = new NetworkStream(
                         client,
                         ownsSocket: false);
@@ -208,13 +290,15 @@ namespace OpExec.Tests
                     await AgentDaemonControlProtocol.WriteFrameAsync(
                         stream,
                         request,
-                        CancellationToken.None);
+                        TestContext.Current.CancellationToken);
                     var response = await AgentDaemonControlProtocol.ReadFrameAsync(
                         stream,
-                        CancellationToken.None);
+                        TestContext.Current.CancellationToken);
 
                     AgentDaemonControlProtocol.ValidateSuccessResponse(response);
-                    await stopped.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                    await stopped.Task.WaitAsync(
+                        TimeSpan.FromSeconds(5),
+                        TestContext.Current.CancellationToken);
                 }
 
                 Assert.False(File.Exists(controlSocketPath));
@@ -222,6 +306,146 @@ namespace OpExec.Tests
             finally
             {
                 Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Fact]
+        [SupportedOSPlatform("linux")]
+        public async Task ControlServerDisposalWaitsForActiveClientHandler()
+        {
+            Assert.SkipUnless(
+                OperatingSystem.IsLinux(),
+                "Daemon control integration requires Linux Unix-domain sockets.");
+
+            var directory = Path.Combine(
+                Path.GetTempPath(),
+                $"opexec-control-drain-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(directory);
+            using var stopEntered = new ManualResetEventSlim();
+            using var allowStopToFinish = new ManualResetEventSlim();
+            var server = AgentDaemonControlServer.Start(
+                Path.Combine(directory, "agent.sock"),
+                () =>
+                {
+                    stopEntered.Set();
+                    allowStopToFinish.Wait();
+                },
+                log: null,
+                TestContext.Current.CancellationToken);
+
+            try
+            {
+                using var client = new Socket(
+                    AddressFamily.Unix,
+                    SocketType.Stream,
+                    ProtocolType.Unspecified);
+                await client.ConnectAsync(
+                    new UnixDomainSocketEndPoint(
+                        Path.Combine(directory, "control.sock")),
+                    TestContext.Current.CancellationToken);
+                await using var stream = new NetworkStream(
+                    client,
+                    ownsSocket: false);
+                var request = AgentDaemonControlProtocol.CreateStopRequest();
+                await AgentDaemonControlProtocol.WriteFrameAsync(
+                    stream,
+                    request,
+                    TestContext.Current.CancellationToken);
+                var response = await AgentDaemonControlProtocol.ReadFrameAsync(
+                    stream,
+                    TestContext.Current.CancellationToken);
+                AgentDaemonControlProtocol.ValidateSuccessResponse(response);
+                Assert.True(
+                    stopEntered.Wait(
+                        TimeSpan.FromSeconds(5),
+                        TestContext.Current.CancellationToken));
+
+                var disposal = server.DisposeAsync().AsTask();
+                await Task.Delay(100, TestContext.Current.CancellationToken);
+                Assert.False(disposal.IsCompleted);
+
+                allowStopToFinish.Set();
+                await disposal.WaitAsync(
+                    TimeSpan.FromSeconds(5),
+                    TestContext.Current.CancellationToken);
+            }
+            finally
+            {
+                allowStopToFinish.Set();
+                await server.DisposeAsync();
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Fact]
+        [SupportedOSPlatform("linux")]
+        public void AgentDaemonLogCreatesOwnerOnlyDirectoryAndFile()
+        {
+            Assert.SkipUnless(
+                OperatingSystem.IsLinux(),
+                "Daemon log permission verification requires Linux Unix modes.");
+
+            var directory = Path.Combine(
+                Path.GetTempPath(),
+                $"opexec-daemon-log-{Guid.NewGuid():N}");
+            var logPath = Path.Combine(directory, "agent.log");
+
+            try
+            {
+                using (var log = new AgentDaemonLog(verbose: true, logPath))
+                {
+                    log.WriteVerbose("test message");
+                }
+
+                Assert.Equal(
+                    UnixFileMode.UserRead |
+                    UnixFileMode.UserWrite |
+                    UnixFileMode.UserExecute,
+                    GetAccessMode(directory));
+                Assert.Equal(
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                    GetAccessMode(logPath));
+            }
+            finally
+            {
+                if (Directory.Exists(directory))
+                {
+                    Directory.Delete(directory, recursive: true);
+                }
+            }
+        }
+
+        [SupportedOSPlatform("linux")]
+        private static UnixFileMode GetAccessMode(string path)
+        {
+            const UnixFileMode accessMask =
+                UnixFileMode.UserRead |
+                UnixFileMode.UserWrite |
+                UnixFileMode.UserExecute |
+                UnixFileMode.GroupRead |
+                UnixFileMode.GroupWrite |
+                UnixFileMode.GroupExecute |
+                UnixFileMode.OtherRead |
+                UnixFileMode.OtherWrite |
+                UnixFileMode.OtherExecute;
+
+            return File.GetUnixFileMode(path) & accessMask;
+        }
+
+        private sealed class FragmentedReadStream : MemoryStream
+        {
+            public FragmentedReadStream(byte[] buffer)
+                : base(buffer)
+            {
+            }
+
+            public override ValueTask<int> ReadAsync(
+                Memory<byte> buffer,
+                CancellationToken cancellationToken = default)
+            {
+                return base.ReadAsync(
+                    buffer[..Math.Min(1, buffer.Length)],
+                    cancellationToken);
             }
         }
     }

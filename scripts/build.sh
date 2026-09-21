@@ -1,4 +1,48 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: © 2026 Andrew J. Moore
+# SPDX-FileContributor: Andrew J. Moore
+# SPDX-License-Identifier: MIT
+#
+# =============================================================================
+# Script:       scripts/build.sh
+# Author:       Andrew J. Moore
+# Revised:      2026-09-21
+# Revision:     r13
+# Source:       https://github.com/bobapplemac/opexec
+#
+# Purpose:
+#   Implements repository restore, build, test, publish, and clean operations
+#   for the root Makefile using either a native .NET SDK or Docker.
+#
+# Comments:
+#   Native .NET 10 is preferred automatically. Docker is used as the fallback.
+#   Both backends write generated output below the repository artifacts folder.
+#
+# Dependencies:
+#   POSIX sh, grep, and standard Unix file utilities.
+#   One of:
+#     .NET 10 SDK - https://learn.microsoft.com/dotnet/core/install/linux-debian
+#     Docker Engine - https://docs.docker.com/engine/install/debian/
+#
+# Environment:
+#   BUILD_BACKEND    - auto (default), dotnet, or docker.
+#   DOTNET           - Native dotnet command; default: dotnet.
+#   DOCKER           - Docker command; default: docker.
+#   CONFIGURATION    - MSBuild configuration; default: Release.
+#   PUBLISH_PROFILE  - Publish profile name; default: linux-x64.
+#   DOTNET_SDK_IMAGE - Docker SDK image; default: mcr.microsoft.com/dotnet/sdk:10.0.401-noble.
+#
+# Usage:
+#   scripts/build.sh [restore|build|test|publish|clean]
+#
+# Arguments:
+#   restore - Restore solution and runtime dependencies.
+#   build   - Compile the solution into artifacts/bin.
+#   test    - Build and run the complete automated test suite.
+#   publish - Produce the local Linux x64 executable in artifacts/publish.
+#   clean   - Remove centralized and legacy project-local build output.
+#   Omitted - Equivalent to publish.
+# =============================================================================
 
 set -eu
 

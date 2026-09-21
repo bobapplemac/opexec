@@ -21,7 +21,8 @@ and replace the credential before publication.
 
 Run `dotnet test src/OpExec.slnx -c Release` on both Windows and Linux. The suite uses
 fake 1Password responses; it does not validate live account authentication.
-Linux-only installation and daemon-control tests return early on Windows, Unix
-socket tests return early when sockets are unavailable, and Unix permission
-assertions are not exercised on Windows. Test runner pass totals include those
-early returns.
+Linux-only installation and daemon-control tests are reported as skipped on
+Windows, and Unix-socket tests are reported as skipped when sockets are
+unavailable. Unix permission assertions are not exercised on Windows. Test
+summaries therefore distinguish unavailable platform coverage from passing
+coverage.

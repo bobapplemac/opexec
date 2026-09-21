@@ -127,19 +127,41 @@ namespace OpExec.Tests
             Assert.Equal(InvocationAction.ShowLicenses, request.Action);
         }
 
-        [Fact]
-        public void OpSshRecognizesStandaloneLicensesOption()
+        [Theory]
+        [InlineData("--help", nameof(InvocationAction.ShowHelp))]
+        [InlineData("--version", nameof(InvocationAction.ShowVersion))]
+        [InlineData("--licenses", nameof(InvocationAction.ShowLicenses))]
+        public void OpSshRecognizesWrapperOnlyStandaloneLongOption(
+            string option,
+            string expectedAction)
         {
             var request = AssertSuccess(
-                _parser.Parse("opssh", new[] { "--licenses" }));
+                _parser.Parse("opssh", new[] { option }));
 
-            Assert.Equal(InvocationAction.ShowLicenses, request.Action);
+            Assert.Equal(expectedAction, request.Action.ToString());
         }
 
-        [Fact]
-        public void OpSshPreservesLicensesArgumentWhenItIsNotStandalone()
+        [Theory]
+        [InlineData("--help")]
+        [InlineData("--version")]
+        [InlineData("--licenses")]
+        public void OpSshPreservesWrapperLongOptionWhenItIsNotStandalone(
+            string option)
         {
-            var arguments = new[] { "host", "--licenses" };
+            var arguments = new[] { "host", option };
+            var request = AssertSuccess(_parser.Parse("opssh", arguments));
+
+            Assert.Equal(InvocationAction.ExecuteCommand, request.Action);
+            Assert.Equal(arguments, request.Arguments);
+        }
+
+        [Theory]
+        [InlineData("-V")]
+        [InlineData("-v")]
+        [InlineData("-q")]
+        public void OpSshPreservesNativeSshShortOption(string option)
+        {
+            var arguments = new[] { option };
             var request = AssertSuccess(_parser.Parse("opssh", arguments));
 
             Assert.Equal(InvocationAction.ExecuteCommand, request.Action);

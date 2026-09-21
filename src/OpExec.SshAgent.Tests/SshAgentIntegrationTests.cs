@@ -13,10 +13,9 @@ namespace OpExec.SshAgent.Tests
         [Fact]
         public async Task ServerHandlesConnectionsAndRemovesRuntimeDirectoryOnShutdown()
         {
-            if (!Socket.OSSupportsUnixDomainSockets)
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                Socket.OSSupportsUnixDomainSockets,
+                "SSH-agent integration requires Unix-domain socket support.");
 
             var testRoot = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(),
@@ -147,10 +146,9 @@ namespace OpExec.SshAgent.Tests
         [Fact]
         public async Task OversizedResponseBecomesFailureAndServerRemainsAvailable()
         {
-            if (!Socket.OSSupportsUnixDomainSockets)
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                Socket.OSSupportsUnixDomainSockets,
+                "SSH-agent integration requires Unix-domain socket support.");
 
             var testRoot = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(),
@@ -196,10 +194,9 @@ namespace OpExec.SshAgent.Tests
         [Fact]
         public async Task ProviderFailureLoggingDoesNotExposeExceptionMessage()
         {
-            if (!Socket.OSSupportsUnixDomainSockets)
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                Socket.OSSupportsUnixDomainSockets,
+                "SSH-agent integration requires Unix-domain socket support.");
 
             var testRoot = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(),
@@ -249,10 +246,9 @@ namespace OpExec.SshAgent.Tests
         [Fact]
         public async Task StartupFailureRemovesPartiallyCreatedRuntimeDirectory()
         {
-            if (!Socket.OSSupportsUnixDomainSockets)
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                Socket.OSSupportsUnixDomainSockets,
+                "SSH-agent integration requires Unix-domain socket support.");
 
             var testRoot = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(),
@@ -301,10 +297,9 @@ namespace OpExec.SshAgent.Tests
         [Fact]
         public async Task ShutdownFailureStillRemovesRuntimeDirectory()
         {
-            if (!Socket.OSSupportsUnixDomainSockets)
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                Socket.OSSupportsUnixDomainSockets,
+                "SSH-agent integration requires Unix-domain socket support.");
 
             var testRoot = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(),

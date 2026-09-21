@@ -15,7 +15,9 @@ The same executable is invoked through three user-facing names:
 - `opexec` runs an arbitrary command in a scoped 1Password and SSH-agent context.
 - `opshell` starts an interactive shell in that context.
 - `opssh` passes arguments through to OpenSSH, except when its first argument is the
-  reserved `--agent` mode selector.
+  reserved `--agent` mode selector. The standalone long options `--help`,
+  `--version`, and `--licenses` are also handled by the wrapper; OpenSSH advertises
+  only short options, which remain untouched.
 
 ## OpExec.SshAgent
 
@@ -52,3 +54,11 @@ length. The control protocol is implemented with the platform `System.Text.Json`
 library because the current surface contains only one method; this avoids importing
 a general RPC framework and its transitive dependency graph into the self-contained
 executable.
+
+OpExec also deliberately keeps its logging surface internal rather than adding
+NLog. Logging here is limited to secret-safe diagnostics and one private daemon log
+whose directory and file modes must be set and verified as `0700` and `0600`.
+The small project-specific implementation makes those security boundaries explicit,
+keeps the class libraries logger-independent, and avoids adding a dependency whose
+general feature set is not needed. This is an approved project-specific exception
+to the usual NLog preference.

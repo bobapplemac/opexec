@@ -36,10 +36,9 @@ namespace OpExec.OnePassword.Tests
         [Fact]
         public async Task CommandRunnerCapturesSecretOutputWithoutClosingPipe()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
+            Assert.SkipUnless(
+                OperatingSystem.IsWindows(),
+                "The anonymous-pipe regression is specific to Windows.");
 
             var runner = new OnePasswordCommandRunner();
             var result = await runner.RunSecretAsync(

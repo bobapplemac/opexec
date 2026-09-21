@@ -1,6 +1,17 @@
 // SPDX-FileCopyrightText: © 2026 Andrew J. Moore
 // SPDX-FileContributor: Andrew J. Moore
 // SPDX-License-Identifier: MIT
+//
+// ------------------------------------------------------------------------------------------
+// File:        AgentDaemonLog.cs
+// Revision:    r13
+// Modified:    2026-09-21
+// Author:      Andrew J. Moore
+// License:     MIT License
+// Source:      https://github.com/bobapplemac/opexec
+// Description: Writes the detached SSH-agent's bounded, secret-safe diagnostics to a
+//              lazily created state file with verified owner-only Unix permissions.
+// ------------------------------------------------------------------------------------------
 
 using System.Text;
 
@@ -8,13 +19,30 @@ namespace OpExec
 {
     internal sealed class AgentDaemonLog : IDisposable
     {
+        private const UnixFileMode PermissionMask =
+            UnixFileMode.UserRead |
+            UnixFileMode.UserWrite |
+            UnixFileMode.UserExecute |
+            UnixFileMode.GroupRead |
+            UnixFileMode.GroupWrite |
+            UnixFileMode.GroupExecute |
+            UnixFileMode.OtherRead |
+            UnixFileMode.OtherWrite |
+            UnixFileMode.OtherExecute;
+
         private readonly object _sync = new();
         private StreamWriter? _writer;
 
         public AgentDaemonLog(bool verbose)
+            : this(verbose, ResolvePath())
         {
+        }
+
+        internal AgentDaemonLog(bool verbose, string path)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(path);
             Verbose = verbose;
-            Path = ResolvePath();
+            Path = System.IO.Path.GetFullPath(path);
 
             if (verbose)
             {
@@ -74,7 +102,10 @@ namespace OpExec
                     UnixFileMode.UserRead |
                     UnixFileMode.UserWrite |
                     UnixFileMode.UserExecute;
-                File.SetUnixFileMode(directory, directoryMode);
+                SetAndVerifyUnixMode(
+                    directory,
+                    directoryMode,
+                    "daemon diagnostic directory");
             }
 
             var stream = new FileStream(
@@ -83,14 +114,45 @@ namespace OpExec
                 FileAccess.Write,
                 FileShare.Read);
 
-            if (!OperatingSystem.IsWindows())
+            try
             {
-                File.SetUnixFileMode(
-                    Path,
-                    UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                if (!OperatingSystem.IsWindows())
+                {
+                    SetAndVerifyUnixMode(
+                        Path,
+                        UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                        "daemon diagnostic log");
+                }
+
+                _writer = new StreamWriter(stream, new UTF8Encoding(false));
+            }
+            catch
+            {
+                stream.Dispose();
+                throw;
+            }
+        }
+
+        private static void SetAndVerifyUnixMode(
+            string path,
+            UnixFileMode expectedMode,
+            string description)
+        {
+            if (!OperatingSystem.IsLinux())
+            {
+                throw new PlatformNotSupportedException(
+                    "Detached agent logs require Linux Unix file modes.");
             }
 
-            _writer = new StreamWriter(stream, new UTF8Encoding(false));
+            File.SetUnixFileMode(path, expectedMode);
+            var actualMode = File.GetUnixFileMode(path) & PermissionMask;
+
+            if (actualMode != expectedMode)
+            {
+                throw new UnauthorizedAccessException(
+                    $"The {description} permissions could not be restricted to " +
+                    $"{Convert.ToString((int)expectedMode, 8)}.");
+            }
         }
 
         private static string ResolvePath()

@@ -1,3 +1,18 @@
+# SPDX-FileCopyrightText: © 2026 Andrew J. Moore
+# SPDX-FileContributor: Andrew J. Moore
+# SPDX-License-Identifier: MIT
+#
+# ------------------------------------------------------------------------------------------
+# File:        Makefile
+# Revision:    r13
+# Modified:    2026-09-21
+# Author:      Andrew J. Moore
+# License:     MIT License
+# Source:      https://github.com/bobapplemac/opexec
+# Description: Provides the stable Make front end for native or containerized restore,
+#              build, test, publish, installation, cleanup, and GitHub release workflows.
+# ------------------------------------------------------------------------------------------
+
 .DEFAULT_GOAL := publish
 
 SHELL := /bin/sh

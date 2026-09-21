@@ -159,6 +159,11 @@ prevent the normal inactivity timeout, with an initial post-start check after fi
 seconds. If the session is revoked or cannot be
 renewed after bounded retries, sign in again and restart the scope.
 
+The standalone `opssh --help`, `opssh --version`, and `opssh --licenses` long
+options are handled by OpExec. Native SSH short options such as `-V`, `-v`, and `-q`,
+and all long-option-looking arguments used as part of an SSH invocation, are passed
+to `ssh` unchanged.
+
 See [the architecture](docs/architecture.md), [foreground process execution](docs/foreground-process-execution.md),
 [security hardening boundaries](docs/security-hardening.md), and
 [versioning policy](docs/versioning.md) for design details.

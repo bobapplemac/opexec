@@ -4,8 +4,8 @@
 //
 // ------------------------------------------------------------------------------------------
 // File:        CommandLineParser.cs
-// Revision:    r6
-// Modified:    2026-09-20
+// Revision:    r13
+// Modified:    2026-09-21
 // Author:      Andrew J. Moore
 // License:     MIT License
 // Source:      https://github.com/bobapplemac/opexec
@@ -59,9 +59,17 @@ namespace OpExec
                 case InvocationMode.OpSsh:
                     writer.WriteLine("Usage: opssh [SSH_ARGUMENTS...]");
                     writer.WriteLine("       opssh --agent [OPTIONS]");
-                    writer.WriteLine("       opssh --licenses");
+                    writer.WriteLine("       opssh {--help|--version|--licenses}");
                     writer.WriteLine();
-                    writer.WriteLine("Run ssh with all arguments passed through unchanged.");
+                    writer.WriteLine("Run ssh with arguments passed through unchanged.");
+                    writer.WriteLine();
+                    writer.WriteLine("Wrapper-only standalone options:");
+                    writer.WriteLine("  --help                  Show this help and exit.");
+                    writer.WriteLine("  --version               Show version and exit.");
+                    writer.WriteLine("  --licenses              Show bundled license notices and exit.");
+                    writer.WriteLine();
+                    writer.WriteLine(
+                        "All other arguments, including SSH short options, are passed to ssh unchanged.");
                     break;
                 default:
                     writer.WriteLine("Usage: opexec [OPTIONS] COMMAND [ARGUMENTS...]");
@@ -261,17 +269,28 @@ namespace OpExec
 
         private static CommandLineParseResult ParseOpSsh(IReadOnlyList<string> arguments)
         {
-            if (arguments.Count == 1 && arguments[0] == "--licenses")
+            if (arguments.Count == 1)
             {
-                return CommandLineParseResult.Success(
-                    new InvocationRequest(
-                        InvocationMode.OpSsh,
-                        InvocationAction.ShowLicenses,
-                        null,
-                        null,
-                        loginShell: false,
-                        verbose: false,
-                        quiet: false));
+                var standaloneAction = arguments[0] switch
+                {
+                    "--help" => InvocationAction.ShowHelp,
+                    "--version" => InvocationAction.ShowVersion,
+                    "--licenses" => InvocationAction.ShowLicenses,
+                    _ => (InvocationAction?)null
+                };
+
+                if (standaloneAction is not null)
+                {
+                    return CommandLineParseResult.Success(
+                        new InvocationRequest(
+                            InvocationMode.OpSsh,
+                            standaloneAction.Value,
+                            null,
+                            null,
+                            loginShell: false,
+                            verbose: false,
+                            quiet: false));
+                }
             }
 
             if (arguments.Count > 0 && arguments[0] == "--agent")

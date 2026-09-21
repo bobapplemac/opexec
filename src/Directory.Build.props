@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ProductMajor>1</ProductMajor>
-    <ProductRevision>12</ProductRevision>
+    <ProductRevision>13</ProductRevision>
     <Version>$(ProductMajor).$(ProductRevision).0</Version>
     <Version Condition="'$(ProductBuildLabel)' != ''">$(ProductMajor).$(ProductRevision).0-$(ProductBuildLabel)</Version>
     <AssemblyVersion>$(ProductMajor).0.0.0</AssemblyVersion>

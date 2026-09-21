@@ -1,4 +1,44 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: © 2026 Andrew J. Moore
+# SPDX-FileContributor: Andrew J. Moore
+# SPDX-License-Identifier: MIT
+#
+# =============================================================================
+# Script:       scripts/release.sh
+# Author:       Andrew J. Moore
+# Revised:      2026-09-21
+# Revision:     r13
+# Source:       https://github.com/bobapplemac/opexec
+#
+# Purpose:
+#   Tests and publishes a fresh Linux x64 executable, packages it with a SHA-256
+#   checksum, and creates the corresponding immutable GitHub tag and release.
+#
+# Comments:
+#   Releases require Linux, a clean working tree, and HEAD equal to origin/main.
+#   This script belongs to the repository and is not a standalone remote installer.
+#
+# Dependencies:
+#   git, GitHub CLI (gh), sed, tar, sha256sum, and standard Unix file utilities.
+#   Debian: apt install git gh sed tar coreutils
+#   Build dependencies are documented by scripts/build.sh.
+#   Authenticate before release with: gh auth login
+#
+# Environment:
+#   GH_TOKEN         - Optional GitHub CLI token instead of stored gh authentication.
+#   BUILD_BACKEND    - auto (default), dotnet, or docker; passed to build.sh.
+#   DOTNET           - Native dotnet command; default: dotnet.
+#   DOCKER           - Docker command; default: docker.
+#   CONFIGURATION    - MSBuild configuration; default: Release.
+#   PUBLISH_PROFILE  - Publish profile name; default: linux-x64.
+#   DOTNET_SDK_IMAGE - Docker SDK image used by build.sh.
+#
+# Usage:
+#   scripts/release.sh
+#
+# Arguments:
+#   None. Unknown positional arguments are not supported.
+# =============================================================================
 
 set -eu
 
@@ -21,6 +61,8 @@ fail() {
     echo "Error: $*" >&2
     exit 1
 }
+
+[ "$#" -eq 0 ] || fail "release.sh does not accept positional arguments."
 
 require_command() {
     if ! command -v "$1" >/dev/null 2>&1; then

@@ -47,3 +47,9 @@ arguments through `ArgumentList`, redirects all three standard handles away from
 detached worker, and exchanges one bounded internal readiness record. No secret is
 placed in an argument or readiness record. All ordinary short-lived helper commands
 continue to use CliWrap.
+
+That launcher-private readiness record is intentionally not JSON-RPC. It carries
+exactly one startup result over a one-shot inherited stream, with no reusable
+endpoint, methods, request correlation, or ongoing conversation. A bounded,
+base64-encoded tab-delimited record is clearer and smaller for this single-purpose
+handoff. All actual IPC endpoints continue to use length-framed UTF-8 JSON-RPC.
