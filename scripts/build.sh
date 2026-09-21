@@ -131,9 +131,12 @@ run_dotnet() {
                 --artifacts-path "$artifacts_dir"
             ;;
         test)
-            "$dotnet_command" test --solution src/OpExec.slnx \
-                --configuration "$configuration" \
-                --artifacts-path "$artifacts_dir"
+            (
+                cd src
+                "$dotnet_command" test --solution OpExec.slnx \
+                    --configuration "$configuration" \
+                    --artifacts-path "$artifacts_dir"
+            )
             ;;
         publish)
             "$dotnet_command" publish src/OpExec/OpExec.csproj \

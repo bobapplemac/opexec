@@ -20,8 +20,7 @@ FROM ${DOTNET_SDK_IMAGE} AS restore
 
 WORKDIR /source
 
-COPY global.json ./
-COPY src/Directory.Build.props src/OpExec.slnx src/
+COPY src/Directory.Build.props src/global.json src/OpExec.slnx src/
 COPY src/OpExec/OpExec.csproj src/OpExec/
 COPY src/OpExec.OnePassword/OpExec.OnePassword.csproj src/OpExec.OnePassword/
 COPY src/OpExec.SshAgent/OpExec.SshAgent.csproj src/OpExec.SshAgent/
@@ -45,9 +44,10 @@ COPY --from=build /artifacts/ /
 
 FROM source AS test
 ARG CONFIGURATION=Release
-RUN dotnet test --solution src/OpExec.slnx \
-    --configuration ${CONFIGURATION} \
-    --artifacts-path /artifacts
+RUN cd src && \
+    dotnet test --solution OpExec.slnx \
+        --configuration ${CONFIGURATION} \
+        --artifacts-path /artifacts
 
 FROM source AS publish
 ARG CONFIGURATION=Release

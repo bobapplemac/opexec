@@ -19,11 +19,12 @@ fixture location; do not suppress private-key detection across the repository.
 If any fixture was ever authorized on a real system, remove that authorization
 and replace the credential before publication.
 
-Run `dotnet test --solution src/OpExec.slnx -c Release` on both Windows and Linux.
-The repository selects the native .NET 10 Microsoft Testing Platform runner in
-`global.json` without pinning an SDK version. The xUnit v3 test projects use its
-MTP v2 runner directly; supported Visual Studio versions discover them through
-Test Explorer's native Microsoft Testing Platform integration. The suite uses
+Run `dotnet test --solution OpExec.slnx -c Release` from the `src` directory on
+both Windows and Linux. The repository selects the native .NET 10 Microsoft
+Testing Platform runner in `src/global.json` without pinning an SDK version. The
+xUnit v3 test projects use its MTP v2 runner directly; supported Visual Studio
+versions discover them through Test Explorer's native Microsoft Testing Platform
+integration. The suite uses
 fake 1Password responses; it does not validate live account authentication.
 Linux-only installation and daemon-control tests are reported as skipped on
 Windows, and Unix-socket tests are reported as skipped when sockets are
