@@ -7,13 +7,13 @@ The agent serves Ed25519 and RSA SSH Key items from 1Password. For RSA keys it
 honors the signature algorithm requested by OpenSSH, including legacy RSA/SHA-1;
 client and server SSH policy determines whether that algorithm is permitted.
 
-## Project disclaimer
+## Quick start
 
-OpExec is an independent project and is not affiliated with, endorsed by, or sponsored by 1Password.
-Product names and trademarks belong to their respective
-owners. The software is provided as-is under the MIT License, without warranty.
-Review the [security boundaries](docs/security-hardening.md) before trusting it
-with credentials or using it on systems you administer.
+On Linux x64, download, verify, and install the latest release with:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/bobapplemac/opexec/main/scripts/install.sh | sh
+```
 
 ## Build and validation
 
@@ -196,3 +196,11 @@ opshell --licenses
 opssh --licenses
 opssh --agent --licenses
 ```
+
+## Project disclaimer
+
+OpExec is an independent project and is not affiliated with, endorsed by, or sponsored by 1Password.
+Product names and trademarks belong to their respective
+owners. The software is provided as-is under the MIT License, without warranty.
+Review the [security boundaries](docs/security-hardening.md) before trusting it
+with credentials or using it on systems you administer.
