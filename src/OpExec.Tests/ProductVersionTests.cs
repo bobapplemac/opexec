@@ -16,17 +16,17 @@ namespace OpExec.Tests
         {
             var revisionLabel = ProductVersion.GetRevisionLabel(typeof(Program).Assembly);
 
-            Assert.StartsWith("r13", revisionLabel, StringComparison.Ordinal);
+            Assert.StartsWith("r14", revisionLabel, StringComparison.Ordinal);
             Assert.Equal($"opexec {revisionLabel}", CommandLineParser.GetVersion());
         }
 
         [Fact]
         public void ProductionAndTestAssembliesShareReleaseRevision()
         {
-            AssertVersionMetadata(typeof(Program).Assembly, 13);
-            AssertVersionMetadata(typeof(OnePasswordClient).Assembly, 13);
-            AssertVersionMetadata(typeof(SshAgentOptions).Assembly, 13);
-            AssertVersionMetadata(typeof(ProductVersionTests).Assembly, 13);
+            AssertVersionMetadata(typeof(Program).Assembly, 14);
+            AssertVersionMetadata(typeof(OnePasswordClient).Assembly, 14);
+            AssertVersionMetadata(typeof(SshAgentOptions).Assembly, 14);
+            AssertVersionMetadata(typeof(ProductVersionTests).Assembly, 14);
         }
 
         private static void AssertVersionMetadata(Assembly assembly, int revision)

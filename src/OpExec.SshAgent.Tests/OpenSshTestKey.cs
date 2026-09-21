@@ -45,7 +45,7 @@ namespace OpExec.SshAgent.Tests
 
         private static void AssertPublicKeyParses(out byte[] publicKeyBlob)
         {
-            if (!OpenSshPublicKey.TryParseEd25519(PublicKey, out publicKeyBlob))
+            if (!OpenSshPublicKey.TryParse(PublicKey, out _, out publicKeyBlob))
             {
                 throw new InvalidOperationException("The OpenSSH test key is invalid.");
             }

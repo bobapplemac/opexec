@@ -24,6 +24,10 @@ explicit.
 - Empty, truncated, oversized, trailing-data, and unsupported requests fail without
   terminating the agent server.
 - Concurrent client connections are isolated from one another.
+- RSA signing follows the algorithm requested by the SSH client: SHA-256 or SHA-512
+  through the standard agent flags, and legacy SHA-1 when neither flag is present.
+  Whether legacy RSA/SHA-1 is permitted remains an OpenSSH client/server policy
+  decision.
 
 ## Secret handling
 

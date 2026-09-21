@@ -22,8 +22,10 @@ The same executable is invoked through three user-facing names:
 ## OpExec.SshAgent
 
 `OpExec.SshAgent` is a class library with no 1Password CLI dependency. It owns the
-SSH-agent protocol, Unix socket server, runtime-directory isolation, Ed25519 key
-parsing and signing, and the identity-provider abstraction.
+SSH-agent protocol, Unix socket server, runtime-directory isolation, Ed25519 and RSA
+key parsing and signing, and the identity-provider abstraction. RSA signing
+honors the SSH-agent SHA-2 flags and the legacy zero-flag RSA/SHA-1 behavior; the
+agent does not override OpenSSH client or server algorithm policy.
 
 ## OpExec.OnePassword
 

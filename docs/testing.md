@@ -6,8 +6,10 @@ them as a usable credential, or use them to protect real systems or data.
 
 - `src/OpExec.SshAgent.Tests/OpenSshTestKey.cs` contains an unencrypted Ed25519 OpenSSH
   private key and its public key, with comment `opexec-milestone-6-test-key`.
-- `src/OpExec.OnePassword.Tests/OpenSshTestKey.cs` contains the same private key for
-  fake 1Password responses.
+- `src/OpExec.SshAgent.Tests/RsaOpenSshTestKey.cs` contains an unencrypted 2048-bit
+  RSA OpenSSH private key and its public key, with comment `opexec-rsa-test-key`.
+- `src/OpExec.OnePassword.Tests/OpenSshTestKey.cs` contains the same Ed25519 and RSA
+  private keys for fake 1Password responses.
 - `src/OpExec.SshAgent.Tests/TestIdentityProvider.cs` contains a deterministic public
   Ed25519 seed, with comment `opexec-milestone-4-test-key`, and derives test keys
   from it. These are test-assembly fixtures, not production credentials.

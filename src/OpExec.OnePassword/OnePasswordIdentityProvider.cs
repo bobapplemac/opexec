@@ -4,8 +4,8 @@
 //
 // ------------------------------------------------------------------------------------------
 // File:        OnePasswordIdentityProvider.cs
-// Revision:    r3
-// Modified:    2026-09-19
+// Revision:    r14
+// Modified:    2026-09-21
 // Author:      Andrew J. Moore
 // License:     MIT License
 // Source:      https://github.com/bobapplemac/opexec
@@ -61,7 +61,10 @@ namespace OpExec.OnePassword
             {
                 var publicKey = await client.GetPublicKeyAsync(item, cancellationToken);
 
-                if (!OpenSshPublicKey.TryParseEd25519(publicKey, out var publicKeyBlob))
+                if (!OpenSshPublicKey.TryParse(
+                        publicKey,
+                        out var algorithm,
+                        out var publicKeyBlob))
                 {
                     unsupportedCount++;
                     continue;
@@ -76,7 +79,7 @@ namespace OpExec.OnePassword
                 }
 
                 identities.Add(new SshIdentity(
-                    SshAlgorithms.Ed25519,
+                    algorithm,
                     publicKeyBlob,
                     item.Title));
             }
@@ -144,7 +147,15 @@ namespace OpExec.OnePassword
 
             using (privateKey)
             {
-                var signature = Ed25519OpenSshSigner.Sign(privateKey, identity, data.Span);
+                var signature = identity.Algorithm switch
+                {
+                    SshAlgorithms.Ed25519 =>
+                        Ed25519OpenSshSigner.Sign(privateKey, identity, data.Span),
+                    SshAlgorithms.Rsa =>
+                        RsaOpenSshSigner.Sign(privateKey, identity, data.Span, flags),
+                    _ => throw new InvalidOperationException(
+                        "The requested identity uses an unsupported algorithm.")
+                };
                 _log?.Invoke($"sign succeeded: {fingerprint}");
                 return signature;
             }

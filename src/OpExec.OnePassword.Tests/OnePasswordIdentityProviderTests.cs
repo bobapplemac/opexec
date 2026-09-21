@@ -27,11 +27,13 @@ namespace OpExec.OnePassword.Tests
                 [
                   {"id":"item-a","title":"Alpha","category":"SSH_KEY","vault":{"id":"vault-a"}},
                   {"id":"item-b","title":"Duplicate","category":"SSH_KEY","vault":{"id":"vault-a"}},
-                  {"id":"item-c","title":"RSA","category":"SSH_KEY","vault":{"id":"vault-b"}}
+                  {"id":"item-c","title":"RSA","category":"SSH_KEY","vault":{"id":"vault-b"}},
+                  {"id":"item-d","title":"Invalid","category":"SSH_KEY","vault":{"id":"vault-b"}}
                 ]
                 """);
             runner.EnqueueResult(0, PublicKeyJson(PublicKey));
             runner.EnqueueResult(0, PublicKeyJson(PublicKey));
+            runner.EnqueueResult(0, PublicKeyJson(OpenSshTestKey.RsaPublicKey));
             runner.EnqueueResult(0, PublicKeyJson("ssh-rsa AAAA"));
             var client = new OnePasswordClient(new OnePasswordClientOptions(), runner);
             var logs = new List<string>();
@@ -44,12 +46,21 @@ namespace OpExec.OnePassword.Tests
             var firstRead = await provider.GetIdentitiesAsync(CancellationToken.None);
             var secondRead = await provider.GetIdentitiesAsync(CancellationToken.None);
 
-            var identity = Assert.Single(firstRead);
             Assert.Same(firstRead, secondRead);
-            Assert.Equal("Alpha", identity.Comment);
-            Assert.Equal("ssh-ed25519", identity.Algorithm);
+            Assert.Collection(
+                firstRead,
+                identity =>
+                {
+                    Assert.Equal("Alpha", identity.Comment);
+                    Assert.Equal("ssh-ed25519", identity.Algorithm);
+                },
+                identity =>
+                {
+                    Assert.Equal("RSA", identity.Comment);
+                    Assert.Equal("ssh-rsa", identity.Algorithm);
+                });
             Assert.Equal(invocationCountAfterDiscovery, runner.Invocations.Count);
-            Assert.Contains("1Password SSH identities indexed: 1", logs);
+            Assert.Contains("1Password SSH identities indexed: 2", logs);
             Assert.Contains(
                 "1Password SSH identities skipped as unsupported or invalid: 1",
                 logs);
@@ -99,6 +110,40 @@ namespace OpExec.OnePassword.Tests
                     invocation.Arguments.Count > 0 && invocation.Arguments[0] == "read"));
             Assert.Equal(2, logs.Count(message => message.StartsWith("sign requested: SHA256:")));
             Assert.Equal(2, logs.Count(message => message.StartsWith("sign succeeded: SHA256:")));
+        }
+
+        [Theory]
+        [InlineData(0U, "ssh-rsa")]
+        [InlineData(0x02U, "rsa-sha2-256")]
+        [InlineData(0x04U, "rsa-sha2-512")]
+        public async Task RsaSigningHonorsAgentFlagsAndZeroesSecretOutput(
+            uint flags,
+            string expectedAlgorithm)
+        {
+            var runner = new FakeOnePasswordCommandRunner();
+            runner.EnqueueResult(0, "2.34.0\n");
+            runner.EnqueueResult(
+                0,
+                "[{\"id\":\"item-rsa\",\"title\":\"RSA\",\"category\":\"SSH_KEY\",\"vault\":{\"id\":\"vault-a\"}}]");
+            runner.EnqueueResult(0, PublicKeyJson(OpenSshTestKey.RsaPublicKey));
+            var privateKey = OpenSshTestKey.CreateRsaPrivateKeyBytes();
+            runner.EnqueueSecretResult(0, privateKey);
+            var provider = await OnePasswordIdentityProvider.CreateAsync(
+                new OnePasswordClient(new OnePasswordClientOptions(), runner),
+                cancellationToken: TestContext.Current.CancellationToken);
+            var identity = Assert.Single(
+                await provider.GetIdentitiesAsync(CancellationToken.None));
+
+            var signature = await provider.SignAsync(
+                identity,
+                "1Password RSA signing"u8.ToArray(),
+                flags,
+                CancellationToken.None);
+
+            Assert.Equal("ssh-rsa", identity.Algorithm);
+            Assert.Equal(expectedAlgorithm, signature.Algorithm);
+            Assert.Equal(256, signature.SignatureBlob.Length);
+            Assert.All(privateKey, value => Assert.Equal(0, value));
         }
 
         [Fact]

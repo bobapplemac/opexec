@@ -4,26 +4,18 @@
 
 using System.Text;
 
-namespace OpExec.OnePassword.Tests
+namespace OpExec.SshAgent.Tests
 {
     // PUBLIC TEST FIXTURE: this private key is intentionally published and is not a secret.
     // Never authorize it on a real system or use it to protect data. See docs/testing.md.
-    internal static class OpenSshTestKey
+    internal static class RsaOpenSshTestKey
     {
-        public const string RsaPublicKey =
+        public const string PublicKey =
             "ssh-rsa " +
-            "AAAAB3NzaC1yc2EAAAADAQABAAABAQDjzejeQs7p2ouN/N47kpA2bVOFOR/VIgpFyDeae+LxzetlLR2G0LveVdcBhx9fKjXbvWQk6Ri6hQRMmVEdcpWcBME/G21pOMQDyW5XkYbFuylmq3sJ4Y0A2Q580LtsCZcCipCDbnSidkXr9mk4Jq5uAVj+Xk07Ee9gGZNMXZD7e2VDfEeNOpLWFCe5mcEXfaDEj4ONe82ZpwrgxtwwVwmt0t2TwNkbsb9QBo0hLGALIB74qzrPR3Az/LMX7n+cd5rTLuL/bi6cMSJMpNoPb8V3Caf01kUfXZRrEgY5kwkxKP6iwssrBYkcLPRiwZnSRGfQTGHFZr8GTeYk33G+w6sV";
+            "AAAAB3NzaC1yc2EAAAADAQABAAABAQDjzejeQs7p2ouN/N47kpA2bVOFOR/VIgpFyDeae+LxzetlLR2G0LveVdcBhx9fKjXbvWQk6Ri6hQRMmVEdcpWcBME/G21pOMQDyW5XkYbFuylmq3sJ4Y0A2Q580LtsCZcCipCDbnSidkXr9mk4Jq5uAVj+Xk07Ee9gGZNMXZD7e2VDfEeNOpLWFCe5mcEXfaDEj4ONe82ZpwrgxtwwVwmt0t2TwNkbsb9QBo0hLGALIB74qzrPR3Az/LMX7n+cd5rTLuL/bi6cMSJMpNoPb8V3Caf01kUfXZRrEgY5kwkxKP6iwssrBYkcLPRiwZnSRGfQTGHFZr8GTeYk33G+w6sV " +
+            "opexec-rsa-test-key";
 
         private const string PrivateKey =
-            "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
-            "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n" +
-            "QyNTUxOQAAACAJRrJnOiVyW9hoHOfeXRTda2uwsWrBmmsllaQfWX+BKwAAAKBdZcvPXWXL\n" +
-            "zwAAAAtzc2gtZWQyNTUxOQAAACAJRrJnOiVyW9hoHOfeXRTda2uwsWrBmmsllaQfWX+BKw\n" +
-            "AAAEDATcRX4AV0F7zZe2Ntsp33IHEyU83W6box/7+OrZ0xZQlGsmc6JXJb2Ggc595dFN1r\n" +
-            "a7CxasGaayWVpB9Zf4ErAAAAG29wZXhlYy1taWxlc3RvbmUtNi10ZXN0LWtleQEC\n" +
-            "-----END OPENSSH PRIVATE KEY-----\n";
-
-        private const string RsaPrivateKey =
             "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
             "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn\n" +
             "NhAAAAAwEAAQAAAQEA483o3kLO6dqLjfzeO5KQNm1ThTkf1SIKRcg3mnvi8c3rZS0dhtC7\n" +
@@ -52,14 +44,20 @@ namespace OpExec.OnePassword.Tests
             "4NerXmYHfQby2RRBAAAAE29wZXhlYy1yc2EtdGVzdC1rZXkBAgMEBQYH\n" +
             "-----END OPENSSH PRIVATE KEY-----\n";
 
-        public static byte[] CreatePrivateKeyBytes()
+        public static SecretBuffer CreatePrivateKeyBuffer()
         {
-            return Encoding.ASCII.GetBytes(PrivateKey);
+            var bytes = Encoding.ASCII.GetBytes(PrivateKey);
+            return new SecretBuffer(bytes, bytes.Length);
         }
 
-        public static byte[] CreateRsaPrivateKeyBytes()
+        public static SshIdentity CreateIdentity()
         {
-            return Encoding.ASCII.GetBytes(RsaPrivateKey);
+            if (!OpenSshPublicKey.TryParse(PublicKey, out var algorithm, out var publicKeyBlob))
+            {
+                throw new InvalidOperationException("The OpenSSH RSA test key is invalid.");
+            }
+
+            return new SshIdentity(algorithm, publicKeyBlob, "opexec-rsa-test-key");
         }
     }
 }

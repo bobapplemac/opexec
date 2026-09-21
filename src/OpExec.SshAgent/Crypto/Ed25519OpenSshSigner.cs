@@ -4,8 +4,8 @@
 //
 // ------------------------------------------------------------------------------------------
 // File:        Ed25519OpenSshSigner.cs
-// Revision:    r3
-// Modified:    2026-09-19
+// Revision:    r14
+// Modified:    2026-09-21
 // Author:      Andrew J. Moore
 // License:     MIT License
 // Source:      https://github.com/bobapplemac/opexec
@@ -13,22 +13,13 @@
 //              and private key agreement, signs SSH-agent payloads, and clears sensitive buffers.
 // ------------------------------------------------------------------------------------------
 
-using System.Buffers;
-using System.Buffers.Text;
 using System.Security.Cryptography;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Utilities;
 
 namespace OpExec.SshAgent
 {
     internal static class Ed25519OpenSshSigner
     {
-        private static ReadOnlySpan<byte> BeginMarker =>
-            "-----BEGIN OPENSSH PRIVATE KEY-----"u8;
-
-        private static ReadOnlySpan<byte> EndMarker =>
-            "-----END OPENSSH PRIVATE KEY-----"u8;
-
         public static SshSignature Sign(
             SecretBuffer privateKeyData,
             SshIdentity identity,
@@ -37,11 +28,9 @@ namespace OpExec.SshAgent
             ArgumentNullException.ThrowIfNull(privateKeyData);
             ArgumentNullException.ThrowIfNull(identity);
 
-            var privateKeyBlob = DecodePem(privateKeyData.Span);
-
             try
             {
-                if (OpenSshPrivateKeyUtilities.ParsePrivateKeyBlob(privateKeyBlob) is not
+                if (OpenSshPrivateKey.Parse(privateKeyData) is not
                     Ed25519PrivateKeyParameters privateKey)
                 {
                     throw new InvalidDataException(
@@ -66,10 +55,6 @@ namespace OpExec.SshAgent
                 throw new InvalidDataException(
                     "The private key could not be parsed as an OpenSSH Ed25519 key.",
                     exception);
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(privateKeyBlob);
             }
         }
 
@@ -106,83 +91,5 @@ namespace OpExec.SshAgent
             }
         }
 
-        private static byte[] DecodePem(ReadOnlySpan<byte> pem)
-        {
-            pem = TrimAsciiWhitespace(pem);
-
-            if (!pem.StartsWith(BeginMarker) || !pem.EndsWith(EndMarker))
-            {
-                throw new InvalidDataException(
-                    "The private key is not an OpenSSH private-key PEM value.");
-            }
-
-            var encoded = pem[BeginMarker.Length..^EndMarker.Length];
-            var compact = new byte[encoded.Length];
-            var compactLength = 0;
-
-            try
-            {
-                foreach (var value in encoded)
-                {
-                    if (!IsAsciiWhitespace(value))
-                    {
-                        compact[compactLength++] = value;
-                    }
-                }
-
-                if (compactLength == 0)
-                {
-                    throw new InvalidDataException(
-                        "The OpenSSH private-key PEM value has no encoded data.");
-                }
-
-                var decoded = new byte[Base64.GetMaxDecodedFromUtf8Length(compactLength)];
-
-                try
-                {
-                    var status = Base64.DecodeFromUtf8(
-                        compact.AsSpan(0, compactLength),
-                        decoded,
-                        out var consumed,
-                        out var written);
-
-                    if (status != OperationStatus.Done || consumed != compactLength)
-                    {
-                        throw new InvalidDataException(
-                            "The OpenSSH private-key PEM value contains invalid Base64 data.");
-                    }
-
-                    return decoded.AsSpan(0, written).ToArray();
-                }
-                finally
-                {
-                    CryptographicOperations.ZeroMemory(decoded);
-                }
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(compact);
-            }
-        }
-
-        private static ReadOnlySpan<byte> TrimAsciiWhitespace(ReadOnlySpan<byte> value)
-        {
-            while (!value.IsEmpty && IsAsciiWhitespace(value[0]))
-            {
-                value = value[1..];
-            }
-
-            while (!value.IsEmpty && IsAsciiWhitespace(value[^1]))
-            {
-                value = value[..^1];
-            }
-
-            return value;
-        }
-
-        private static bool IsAsciiWhitespace(byte value)
-        {
-            return value is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n';
-        }
     }
 }

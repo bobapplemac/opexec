@@ -3,6 +3,10 @@
 `opexec` runs commands, shells, and OpenSSH clients in a process-scoped 1Password
 authentication context backed by an ephemeral SSH-agent socket.
 
+The agent serves Ed25519 and RSA SSH Key items from 1Password. For RSA keys it
+honors the signature algorithm requested by OpenSSH, including legacy RSA/SHA-1;
+client and server SSH policy determines whether that algorithm is permitted.
+
 ## Project disclaimer
 
 OpExec is an independent project and is not affiliated with, endorsed by, or sponsored by 1Password.
