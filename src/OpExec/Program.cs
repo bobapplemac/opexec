@@ -95,6 +95,13 @@ namespace OpExec
                     return new SelfInstallationManager().Run(invocation);
                 }
 
+                if (invocation.Action == InvocationAction.Update)
+                {
+                    return await new SelfUpdateManager().RunAsync(
+                        invocation,
+                        shutdown.Token);
+                }
+
                 if (invocation.Action is
                     InvocationAction.StopAgent or InvocationAction.StopAllAgents)
                 {

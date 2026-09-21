@@ -5,7 +5,7 @@
 
 # Downloads, verifies, and installs an OpExec GitHub release for Linux x64.
 # With no argument, the latest release is selected. Pass an explicit rN tag to
-# install a specific release, for example: scripts/install.sh r14
+# install a specific release, for example: scripts/install.sh r15
 
 set -eu
 
@@ -25,11 +25,11 @@ validate_release_tag() {
 
     case "$candidate" in
         r[0-9]*) ;;
-        *) fail "invalid release '$candidate'; expected a tag such as r14" ;;
+        *) fail "invalid release '$candidate'; expected a tag such as r15" ;;
     esac
 
     case "${candidate#r}" in
-        ''|*[!0-9]*) fail "invalid release '$candidate'; expected a tag such as r14" ;;
+        ''|*[!0-9]*) fail "invalid release '$candidate'; expected a tag such as r15" ;;
     esac
 }
 
@@ -40,7 +40,7 @@ case "${1:-}" in
         echo "usage: install.sh [rN]"
         echo
         echo "Downloads, verifies, and installs the latest OpExec release."
-        echo "Pass a release tag such as r14 to install a specific version."
+        echo "Pass a release tag such as r15 to install a specific version."
         exit 0
         ;;
 esac

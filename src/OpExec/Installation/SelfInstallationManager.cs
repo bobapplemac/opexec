@@ -198,7 +198,7 @@ namespace OpExec
             return false;
         }
 
-        private static string ResolveDestinationDirectory(
+        internal static string ResolveDestinationDirectory(
             InvocationAction action,
             bool userInstallation)
         {
@@ -208,12 +208,18 @@ namespace OpExec
             {
                 if (effectiveUserId != 0)
                 {
-                    var operation = action == InvocationAction.Uninstall
-                        ? "Removing an installation from"
-                        : "Installing to";
-                    var option = action == InvocationAction.Uninstall
-                        ? "--uninstall"
-                        : "--install";
+                    var operation = action switch
+                    {
+                        InvocationAction.Uninstall => "Removing an installation from",
+                        InvocationAction.Update => "Updating the installation in",
+                        _ => "Installing to"
+                    };
+                    var option = action switch
+                    {
+                        InvocationAction.Uninstall => "--uninstall",
+                        InvocationAction.Update => "--update",
+                        _ => "--install"
+                    };
                     throw new UnauthorizedAccessException(
                         $"{operation} /usr/local/bin requires root privileges.\n\n" +
                         "Retry for the system installation:\n" +

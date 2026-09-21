@@ -75,6 +75,7 @@ namespace OpExec
                     writer.WriteLine("Usage: opexec [OPTIONS] COMMAND [ARGUMENTS...]");
                     writer.WriteLine("       opexec -i");
                     writer.WriteLine("       opexec --install [--user] [--force]");
+                    writer.WriteLine("       opexec --update [--user] [-y|--yes]");
                     writer.WriteLine("       opexec --uninstall [--user]");
                     writer.WriteLine();
                     writer.WriteLine("Run a command in the scoped execution context.");
@@ -184,6 +185,11 @@ namespace OpExec
             if (values.Install)
             {
                 return LifecycleSuccess(InvocationAction.Install, values);
+            }
+
+            if (values.Update)
+            {
+                return LifecycleSuccess(InvocationAction.Update, values);
             }
 
             if (values.Uninstall)
@@ -412,21 +418,32 @@ namespace OpExec
             OptionValues values,
             bool hasChild)
         {
-            if (values.Install && values.Uninstall)
+            var lifecycleActionCount =
+                (values.Install ? 1 : 0) +
+                (values.Update ? 1 : 0) +
+                (values.Uninstall ? 1 : 0);
+
+            if (lifecycleActionCount > 1)
             {
-                return "The --install and --uninstall options cannot be used together.";
+                return "The --install, --update, and --uninstall options cannot be used together.";
             }
 
-            var hasLifecycleAction = values.Install || values.Uninstall;
+            var hasLifecycleAction = lifecycleActionCount != 0;
 
-            if ((values.UserInstallation || values.Force) && !hasLifecycleAction)
+            if ((values.UserInstallation || values.Force || values.AssumeYes) &&
+                !hasLifecycleAction)
             {
-                return "The --user and --force options require --install or --uninstall.";
+                return "The --user, --force, and --yes options require an installation action.";
             }
 
-            if (values.Force && values.Uninstall)
+            if (values.Force && !values.Install)
             {
                 return "The --force option can be used only with --install.";
+            }
+
+            if (values.AssumeYes && !values.Update)
+            {
+                return "The --yes option can be used only with --update.";
             }
 
             if (hasLifecycleAction && (hasChild || values.Interactive))
@@ -535,6 +552,10 @@ namespace OpExec
                     "Remove opexec and its aliases.",
                     value => values.Uninstall = value is not null);
                 options.Add(
+                    "update",
+                    "Check for and install the latest stable release.",
+                    value => values.Update = value is not null);
+                options.Add(
                     "user",
                     "Use the current user's ~/.local/bin.",
                     value => values.UserInstallation = value is not null);
@@ -542,6 +563,10 @@ namespace OpExec
                     "force",
                     "Replace conflicting files during installation.",
                     value => values.Force = value is not null);
+                options.Add(
+                    "y|yes",
+                    "Install an available update without prompting.",
+                    value => values.AssumeYes = value is not null);
             }
 
             return options;
@@ -620,7 +645,8 @@ namespace OpExec
                     quiet: false,
                     daemon: false,
                     values.UserInstallation,
-                    values.Force));
+                    values.Force,
+                    values.AssumeYes));
         }
 
         private sealed class OptionValues
@@ -643,9 +669,13 @@ namespace OpExec
 
             public bool Uninstall { get; set; }
 
+            public bool Update { get; set; }
+
             public bool UserInstallation { get; set; }
 
             public bool Force { get; set; }
+
+            public bool AssumeYes { get; set; }
         }
 
         private sealed class AgentOptionValues

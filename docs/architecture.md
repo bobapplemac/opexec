@@ -49,6 +49,9 @@ Self-installation copies that published executable atomically and creates relati
 `opshell` and `opssh` symbolic links. System installation targets `/usr/local/bin`;
 the explicit `--user` mode targets `$HOME/.local/bin`. Uninstallation removes only
 aliases that resolve to the managed `opexec` path and refuses unverified files.
+Self-update queries GitHub's latest stable release metadata, compares numeric `rN`
+revisions, verifies the matching Linux x64 archive against its SHA-256 sidecar,
+validates its contents, and delegates replacement to that same installation path.
 
 Detached-agent lifecycle control uses JSON-RPC 2.0 over a private Unix-domain
 socket. Each UTF-8 JSON message is framed by a four-byte unsigned big-endian payload

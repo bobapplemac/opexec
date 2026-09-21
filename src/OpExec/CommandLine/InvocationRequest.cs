@@ -16,7 +16,8 @@ namespace OpExec
             bool quiet,
             bool daemon = false,
             bool userInstallation = false,
-            bool force = false)
+            bool force = false,
+            bool assumeYes = false)
         {
             Mode = mode;
             Action = action;
@@ -28,6 +29,7 @@ namespace OpExec
             Daemon = daemon;
             UserInstallation = userInstallation;
             Force = force;
+            AssumeYes = assumeYes;
         }
 
         public InvocationMode Mode { get; }
@@ -49,5 +51,7 @@ namespace OpExec
         public bool UserInstallation { get; }
 
         public bool Force { get; }
+
+        public bool AssumeYes { get; }
     }
 }

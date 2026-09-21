@@ -126,6 +126,20 @@ Use the corresponding `--uninstall` command, with `--user` when applicable, to
 remove an installation. Installation refuses unrelated existing files unless
 `--force` is explicitly supplied with `--install`.
 
+To check GitHub for a newer stable release and install it, use the same scope and
+privilege level as the original installation:
+
+```bash
+sudo opexec --update
+opexec --update --user
+```
+
+OpExec asks for confirmation before downloading. Pass `-y` or `--yes` to accept
+an available update non-interactively. Drafts and prereleases are not selected.
+Release archives are size-bounded, checked against their published SHA-256
+sidecar, validated to contain only the `opexec` executable, and installed through
+the same atomic replacement path as `--install`.
+
 ```bash
 opexec command argument
 opshell

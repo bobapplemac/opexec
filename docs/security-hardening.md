@@ -97,3 +97,7 @@ explicit.
   the same temporary-name-and-rename pattern.
 - Directories are never overwritten. Unrelated files require explicit `--force` on
   install, and uninstall refuses to remove aliases it cannot verify as managed.
+- Automatic update uses GitHub's stable-release endpoint and rejects draft,
+  prerelease, and noncanonical tags. Downloads have fixed size limits; the archive
+  must match its release checksum and contain exactly one regular file named
+  `opexec` before the atomic installer can replace the managed executable.

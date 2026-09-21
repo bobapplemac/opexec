@@ -257,8 +257,28 @@ namespace OpExec.Tests
         }
 
         [Theory]
+        [InlineData("-y")]
+        [InlineData("--yes")]
+        public void UpdateSupportsAutomaticConfirmation(string confirmationOption)
+        {
+            var request = AssertSuccess(
+                _parser.Parse(
+                    "opexec",
+                    new[] { "--update", "--user", confirmationOption }));
+
+            Assert.Equal(InvocationAction.Update, request.Action);
+            Assert.True(request.UserInstallation);
+            Assert.True(request.AssumeYes);
+        }
+
+        [Theory]
         [InlineData("--install", "--uninstall")]
+        [InlineData("--install", "--update")]
+        [InlineData("--update", "--uninstall")]
         [InlineData("--uninstall", "--force")]
+        [InlineData("--update", "--force")]
+        [InlineData("--install", "--yes")]
+        [InlineData("--yes")]
         [InlineData("--user")]
         public void InvalidInstallationCombinationsAreRejected(params string[] arguments)
         {

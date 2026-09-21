@@ -12,6 +12,7 @@ namespace OpExec
         StopAgent,
         StopAllAgents,
         Install,
+        Update,
         Uninstall,
         ShowHelp,
         ShowAgentHelp,
