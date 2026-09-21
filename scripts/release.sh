@@ -7,21 +7,21 @@
 # Script:       scripts/release.sh
 # Author:       Andrew J. Moore
 # Revised:      2026-09-21
-# Revision:     r13
+# Revision:     r16
 # Source:       https://github.com/bobapplemac/opexec
 #
 # Purpose:
-#   Tests and publishes a fresh Linux x64 executable, packages it with a SHA-256
-#   checksum, and creates the corresponding immutable GitHub tag and release.
+#   Publishes the official versioned binary assets produced by the local package
+#   workflow as an immutable GitHub tag and release.
 #
 # Comments:
 #   Releases require Linux, a clean working tree, and HEAD equal to origin/main.
 #   This script belongs to the repository and is not a standalone remote installer.
 #
 # Dependencies:
-#   git, GitHub CLI (gh), sed, tar, sha256sum, and standard Unix file utilities.
-#   Debian: apt install git gh sed tar coreutils
-#   Build dependencies are documented by scripts/build.sh.
+#   git, GitHub CLI (gh), sed, and standard Unix file utilities.
+#   Debian: apt install git gh sed
+#   Packaging and build dependencies are documented by scripts/package.sh.
 #   Authenticate before release with: gh auth login
 #
 # Environment:
@@ -49,10 +49,8 @@ esac
 
 script_dir=$(CDPATH= cd -- "${script_path%/*}" && pwd)
 repo_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
-build_script=$script_dir/build.sh
+package_script=$script_dir/package.sh
 version_props=$repo_dir/src/Directory.Build.props
-publish_dir=$repo_dir/artifacts/publish/linux-x64
-binary=$publish_dir/opexec
 release_dir=$repo_dir/artifacts/release
 
 cd "$repo_dir"
@@ -88,8 +86,6 @@ require_clean_tree() {
 require_command git
 require_command gh
 require_command sed
-require_command tar
-require_command sha256sum
 
 [ "$(uname -s)" = Linux ] || fail "GitHub releases are currently produced only on Linux."
 [ -f "$version_props" ] || fail "version properties not found: $version_props"
@@ -150,30 +146,10 @@ echo
 echo "Preparing $release_title from $github_repo at $git_short..."
 echo
 
-"$build_script" test
-"$build_script" publish
+sh "$package_script"
 
-[ -f "$binary" ] || fail "published binary not found: $binary"
-
-mkdir -p "$release_dir"
-rm -f "$asset_path" "$checksum_path"
-
-temporary_dir=$(mktemp -d)
-cleanup() {
-    rm -rf "$temporary_dir"
-}
-trap cleanup EXIT INT TERM
-
-cp "$binary" "$temporary_dir/opexec"
-chmod 0755 "$temporary_dir/opexec"
-tar -C "$temporary_dir" -czf "$asset_path" opexec
-(
-    cd "$release_dir"
-    sha256sum "$asset_name" >"$checksum_name"
-)
-
-trap - EXIT INT TERM
-cleanup
+[ -f "$asset_path" ] || fail "package archive not found: $asset_path"
+[ -f "$checksum_path" ] || fail "package checksum not found: $checksum_path"
 
 echo
 echo "Creating GitHub Release $release_tag..."

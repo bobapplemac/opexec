@@ -56,9 +56,11 @@ to an internal library. Because `OpExec.OnePassword` and `OpExec.SshAgent` are
 embedded into the distributed standalone executable, changing either library
 changes the OpExec release artifact and therefore advances the global revision.
 
-The guarded `make release` workflow derives its `rN` Git tag and GitHub Release
-name from `ProductRevision`. It refuses to replace an existing tag or release,
-and requires the release commit to be the current `origin/main` commit.
+The local `make package` workflow derives versioned archive names from
+`ProductRevision`. The guarded `make release` workflow publishes those official
+binary assets under the corresponding `rN` Git tag and GitHub Release. It
+refuses to replace an existing tag or release and requires the release commit to
+be the current `origin/main` commit.
 
 ## Explicit development labels
 

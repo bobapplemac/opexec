@@ -4,13 +4,13 @@
 #
 # ------------------------------------------------------------------------------------------
 # File:        Makefile
-# Revision:    r13
+# Revision:    r16
 # Modified:    2026-09-21
 # Author:      Andrew J. Moore
 # License:     MIT License
 # Source:      https://github.com/bobapplemac/opexec
-# Description: Provides the stable Make front end for native or containerized restore,
-#              build, test, publish, installation, cleanup, and GitHub release workflows.
+# Description: Provides the stable Make front end for local build, test, publish, package,
+#              installation, cleanup, and explicit external release workflows.
 # ------------------------------------------------------------------------------------------
 
 .DEFAULT_GOAL := publish
@@ -27,16 +27,11 @@ DOTNET_SDK_IMAGE ?= mcr.microsoft.com/dotnet/sdk:10.0.401-noble
 export BUILD_BACKEND DOTNET DOCKER CONFIGURATION PUBLISH_PROFILE DOTNET_SDK_IMAGE
 
 BUILD_SCRIPT := scripts/build.sh
+PACKAGE_SCRIPT := scripts/package.sh
 RELEASE_SCRIPT := scripts/release.sh
 BINARY := artifacts/publish/linux-x64/opexec
 
-.PHONY: all build clean docker-build docker-publish docker-test help install \
-	native-build native-publish native-test publish release restore test uninstall
-
-all: publish
-
-restore:
-	$(SHELL) "$(BUILD_SCRIPT)" restore
+.PHONY: build clean help install package publish release test uninstall
 
 build:
 	$(SHELL) "$(BUILD_SCRIPT)" build
@@ -47,26 +42,11 @@ test:
 publish:
 	$(SHELL) "$(BUILD_SCRIPT)" publish
 
+package:
+	$(SHELL) "$(PACKAGE_SCRIPT)"
+
 release:
 	$(SHELL) "$(RELEASE_SCRIPT)"
-
-native-build:
-	BUILD_BACKEND=dotnet $(SHELL) "$(BUILD_SCRIPT)" build
-
-native-test:
-	BUILD_BACKEND=dotnet $(SHELL) "$(BUILD_SCRIPT)" test
-
-native-publish:
-	BUILD_BACKEND=dotnet $(SHELL) "$(BUILD_SCRIPT)" publish
-
-docker-build:
-	BUILD_BACKEND=docker $(SHELL) "$(BUILD_SCRIPT)" build
-
-docker-test:
-	BUILD_BACKEND=docker $(SHELL) "$(BUILD_SCRIPT)" test
-
-docker-publish:
-	BUILD_BACKEND=docker $(SHELL) "$(BUILD_SCRIPT)" publish
 
 install:
 	@test "$$(uname -s)" = Linux || { echo "System installation is supported only on Linux." >&2; exit 1; }
@@ -87,18 +67,18 @@ help:
 	@echo "  make build           Compile the solution into artifacts/bin"
 	@echo "  make test            Build and run the test suite"
 	@echo "  make publish         Create the local deployable binary in artifacts/publish"
-	@echo "  make release         Test, package, and publish an immutable GitHub Release"
+	@echo "  make package         Create a local versioned archive and checksum in artifacts/release"
 	@echo "  make install         Install an existing published binary system-wide"
 	@echo "  make uninstall       Uninstall the system-wide command"
 	@echo "  make clean           Remove artifacts plus project-local bin/obj outputs"
 	@echo "  make help            Show this help"
+	@echo "  make release         Publish official versioned assets to GitHub (external)"
 	@echo
-	@echo "Build, test, and publish prefer a local .NET 10 SDK and fall back to Docker."
+	@echo "Build, test, publish, and package prefer a local .NET 10 SDK and fall back to Docker."
 	@echo "Set BUILD_BACKEND=dotnet or BUILD_BACKEND=docker to override automatic selection."
 	@echo "Examples: make publish BUILD_BACKEND=dotnet"
-	@echo "          make publish BUILD_BACKEND=docker"
-	@echo "The native-publish and docker-publish convenience targets are equivalent shortcuts."
-	@echo "Publishing creates a local artifact; it does not upload a GitHub Release."
+	@echo "          make package BUILD_BACKEND=docker"
+	@echo "Publish and package are local operations; neither uploads a GitHub Release."
 	@echo "Releasing requires GitHub CLI authentication from gh auth login or GH_TOKEN."
 	@echo "Override tools/settings with DOTNET, DOCKER, CONFIGURATION, or PUBLISH_PROFILE."
 	@echo "For a system install, use: make && sudo make install"

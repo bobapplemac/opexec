@@ -36,15 +36,14 @@ The Make workflow automatically prefers a locally installed .NET 10 SDK so it
 benefits from the normal NuGet cache and has the shortest edit/build cycle. If
 the SDK is unavailable and Docker is installed, it uses the pinned SDK container
 instead. This selection applies to `make build`, `make test`, and `make publish`.
-The explicit `native-*` and `docker-*` targets can force either backend:
+The `package` and `release` workflows use the same selection for their build
+steps.
+Set `BUILD_BACKEND` to force either backend while retaining the same action
+vocabulary:
 
 ```sh
 make publish BUILD_BACKEND=dotnet
 make publish BUILD_BACKEND=docker
-
-# Equivalent convenience targets:
-make native-publish
-make docker-publish
 ```
 
 `BUILD_BACKEND` accepts `auto` (the default), `dotnet`, or `docker`, and can also
@@ -55,10 +54,17 @@ build output and is not the installable single-file executable. `make publish`
 and the Visual Studio `linux-x64` folder profile both place the deployable binary
 under `artifacts/publish/linux-x64`. Run `make help` for the complete target list.
 
-## GitHub releases
+## Packages and GitHub releases
 
 `publish` retains its standard .NET meaning: it creates a local deployable
-application. Creating a public GitHub Release is a separate, explicit operation:
+application. `package` is also local: it tests and publishes the application,
+then creates a versioned archive and SHA-256 checksum under `artifacts/release`:
+
+```sh
+make package
+```
+
+Creating a public GitHub Release is a separate, explicit external operation:
 
 ```sh
 gh auth login
@@ -66,11 +72,10 @@ make release
 ```
 
 `make release` requires a clean Linux checkout whose `HEAD` exactly matches
-`origin/main`. It runs the complete test suite, publishes the Linux x64 binary,
-packages it as `artifacts/release/opexec-rN-linux-x64.tar.gz`, writes a SHA-256
-checksum beside it, and creates the corresponding `rN` Git tag and GitHub
-Release using the revision in `src/Directory.Build.props`. `GH_TOKEN` may be
-used instead of an interactive `gh auth login` session.
+`origin/main`. After its publication preflight passes, it runs the local package
+workflow and creates the corresponding `rN` Git tag and GitHub Release using the
+revision in `src/Directory.Build.props`. `GH_TOKEN` may be used instead of an
+interactive `gh auth login` session.
 
 Published revisions are immutable. The release command refuses to replace an
 existing tag or GitHub Release; increment `ProductRevision` for a subsequent
