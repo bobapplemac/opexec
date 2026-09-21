@@ -3,9 +3,8 @@
 `opexec` runs commands, shells, and OpenSSH clients in a process-scoped 1Password
 authentication context backed by an ephemeral SSH-agent socket.
 
-## Project status and disclaimer
+## Project disclaimer
 
-This is the source-only r12 snapshot for the first public release of OpExec.
 OpExec is an independent project and is not affiliated with, endorsed by, or sponsored by 1Password.
 Product names and trademarks belong to their respective
 owners. The software is provided as-is under the MIT License, without warranty.
