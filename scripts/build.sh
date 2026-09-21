@@ -28,9 +28,9 @@ clean_outputs() {
         src/OpExec/bin src/OpExec/obj \
         src/OpExec.OnePassword/bin src/OpExec.OnePassword/obj \
         src/OpExec.SshAgent/bin src/OpExec.SshAgent/obj \
-        tests/OpExec.Tests/bin tests/OpExec.Tests/obj \
-        tests/OpExec.OnePassword.Tests/bin tests/OpExec.OnePassword.Tests/obj \
-        tests/OpExec.SshAgent.Tests/bin tests/OpExec.SshAgent.Tests/obj
+        src/OpExec.Tests/bin src/OpExec.Tests/obj \
+        src/OpExec.OnePassword.Tests/bin src/OpExec.OnePassword.Tests/obj \
+        src/OpExec.SshAgent.Tests/bin src/OpExec.SshAgent.Tests/obj
 }
 
 if [ "$action" = clean ]; then
@@ -79,15 +79,15 @@ esac
 run_dotnet() {
     case "$action" in
         restore)
-            "$dotnet_command" restore OpExec.slnx
+            "$dotnet_command" restore src/OpExec.slnx
             ;;
         build)
-            "$dotnet_command" build OpExec.slnx \
+            "$dotnet_command" build src/OpExec.slnx \
                 --configuration "$configuration" \
                 --artifacts-path "$artifacts_dir"
             ;;
         test)
-            "$dotnet_command" test OpExec.slnx \
+            "$dotnet_command" test src/OpExec.slnx \
                 --configuration "$configuration" \
                 --artifacts-path "$artifacts_dir"
             ;;

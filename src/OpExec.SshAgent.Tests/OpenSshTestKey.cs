@@ -7,7 +7,7 @@ using System.Text;
 namespace OpExec.SshAgent.Tests
 {
     // PUBLIC TEST FIXTURE: this private key is intentionally published and is not a secret.
-    // Never authorize it on a real system or use it to protect data. See tests/README.md.
+    // Never authorize it on a real system or use it to protect data. See docs/testing.md.
     internal static class OpenSshTestKey
     {
         public const string PublicKey =

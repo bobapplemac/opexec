@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../LICENSE.txt" />
+    <File Path="../README.md" />
+    <File Path="../SECURITY.md" />
+    <File Path="../THIRD-PARTY-NOTICES.txt" />
+    <File Path="Directory.Build.props" />
+    <File Path="OpExec.slnLaunch" />
+  </Folder>
+  <Project Path="OpExec/OpExec.csproj" />
+  <Project Path="OpExec.OnePassword/OpExec.OnePassword.csproj" />
+  <Project Path="OpExec.SshAgent/OpExec.SshAgent.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="OpExec.OnePassword.Tests/OpExec.OnePassword.Tests.csproj" />
+    <Project Path="OpExec.SshAgent.Tests/OpExec.SshAgent.Tests.csproj" />
+    <Project Path="OpExec.Tests/OpExec.Tests.csproj" />
+  </Folder>
+</Solution>

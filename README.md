@@ -59,14 +59,14 @@ The equivalent direct .NET commands, which remain suitable for Visual Studio
 and Windows development, are:
 
 ```sh
-dotnet restore OpExec.slnx
-dotnet build OpExec.slnx -c Release --artifacts-path artifacts
-dotnet test OpExec.slnx -c Release --artifacts-path artifacts
+dotnet restore src/OpExec.slnx
+dotnet build src/OpExec.slnx -c Release --artifacts-path artifacts
+dotnet test src/OpExec.slnx -c Release --artifacts-path artifacts
 dotnet publish src/OpExec/OpExec.csproj -p:PublishProfile=linux-x64
 ```
 
 Run validation on Linux as well: some platform-specific tests return early on
-other operating systems. See [test fixtures](tests/README.md) for scope and
+other operating systems. See [test fixtures](docs/testing.md) for scope and
 limitations.
 
 ## Installation and usage
@@ -156,7 +156,8 @@ or sensitive account information in public issues.
 OpExec is licensed under the MIT License.
 See [LICENSE.txt](LICENSE.txt) for the license text. License texts and notices for
 all third-party libraries and runtime components bundled into the self-contained
-executable are retained under [licenses](licenses/README.md).
+executable are retained in
+[THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
 Print the complete embedded notice set from any installed alias with:
 

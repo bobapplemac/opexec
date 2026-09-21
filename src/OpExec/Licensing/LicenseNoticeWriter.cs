@@ -4,8 +4,8 @@
 //
 // ------------------------------------------------------------------------------------------
 // File:        LicenseNoticeWriter.cs
-// Revision:    r5
-// Modified:    2026-09-19
+// Revision:    r6
+// Modified:    2026-09-20
 // Author:      Andrew J. Moore
 // License:     MIT License
 // Source:      https://github.com/bobapplemac/opexec
@@ -25,18 +25,8 @@ namespace OpExec
         {
             new("OpExec", "OpExec.Licenses.OpExec.txt"),
             new(
-                "Mono.Options 6.12.0.148",
-                "OpExec.Licenses.Mono.Options-6.12.0.148.txt"),
-            new("CliWrap 3.10.5", "OpExec.Licenses.CliWrap-3.10.5.txt"),
-            new(
-                "BouncyCastle.Cryptography 2.7.0",
-                "OpExec.Licenses.BouncyCastle.Cryptography-2.7.0.txt"),
-            new(
-                ".NET Runtime 10.0.12",
-                "OpExec.Licenses.dotnet-runtime-10.0.12.txt"),
-            new(
-                ".NET Runtime 10.0.12 Third-Party Notices",
-                "OpExec.Licenses.dotnet-runtime-10.0.12-THIRD-PARTY-NOTICES.txt")
+                "Third-Party Notices",
+                "OpExec.Licenses.ThirdPartyNotices.txt")
         };
 
         public static void Write(TextWriter writer)

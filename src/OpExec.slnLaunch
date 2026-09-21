@@ -1,0 +1,11 @@
+[
+  {
+    "Name": "OpExec",
+    "Projects": [
+      {
+        "Path": "OpExec\\OpExec.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

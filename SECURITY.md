@@ -24,6 +24,6 @@ access. The scope does not isolate credentials from the current user or a
 privileged attacker.
 
 The repository includes intentionally public test private keys and a deterministic
-test seed, documented in [tests/README.md](tests/README.md). They must never be
+test seed, documented in [docs/testing.md](docs/testing.md). They must never be
 authorized on real systems. Reports of exposed credentials elsewhere are welcome;
 do not assume other keys are fixtures.

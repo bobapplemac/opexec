@@ -39,7 +39,7 @@ revision, but does not reset revision.
 
 ## Release identity and Git
 
-The release revision is manually maintained in `Directory.Build.props`. It is not
+The release revision is manually maintained in `src/Directory.Build.props`. It is not
 tightly coupled to a branch, commit, tag, or working-tree state. Ordinary builds
 from different commits can therefore report the same revision while development
 for that release is in progress.

@@ -17,13 +17,12 @@ namespace OpExec.Tests
 
             var output = writer.ToString();
             Assert.Contains("===== OpExec =====", output);
-            Assert.Contains("===== Mono.Options 6.12.0.148 =====", output);
-            Assert.Contains("===== CliWrap 3.10.5 =====", output);
-            Assert.Contains("===== BouncyCastle.Cryptography 2.7.0 =====", output);
-            Assert.Contains("===== .NET Runtime 10.0.12 =====", output);
-            Assert.Contains(
-                "===== .NET Runtime 10.0.12 Third-Party Notices =====",
-                output);
+            Assert.Contains("===== Third-Party Notices =====", output);
+            Assert.Contains("Mono.Options 6.12.0.148 License", output);
+            Assert.Contains("CliWrap 3.10.5 License", output);
+            Assert.Contains("BouncyCastle.Cryptography 2.7.0 License", output);
+            Assert.Contains(".NET Runtime 10.0.12 License", output);
+            Assert.Contains(".NET Runtime 10.0.12 Third-Party Notices", output);
             Assert.Contains("Copyright (C) 2008 Novell", output);
             Assert.Contains("Copyright (c) 2017-2026 Oleksii Holub", output);
             Assert.Contains(

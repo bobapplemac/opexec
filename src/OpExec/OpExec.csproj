@@ -19,10 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../../LICENSE.txt" LogicalName="OpExec.Licenses.OpExec.txt" />
-    <EmbeddedResource Include="../../licenses/Mono.Options-6.12.0.148.txt" LogicalName="OpExec.Licenses.Mono.Options-6.12.0.148.txt" />
-    <EmbeddedResource Include="../../licenses/CliWrap-3.10.5.txt" LogicalName="OpExec.Licenses.CliWrap-3.10.5.txt" />
-    <EmbeddedResource Include="../../licenses/BouncyCastle.Cryptography-2.7.0.txt" LogicalName="OpExec.Licenses.BouncyCastle.Cryptography-2.7.0.txt" />
-    <EmbeddedResource Include="../../licenses/dotnet-runtime-10.0.12.txt" LogicalName="OpExec.Licenses.dotnet-runtime-10.0.12.txt" />
-    <EmbeddedResource Include="../../licenses/dotnet-runtime-10.0.12-THIRD-PARTY-NOTICES.txt" LogicalName="OpExec.Licenses.dotnet-runtime-10.0.12-THIRD-PARTY-NOTICES.txt" />
+    <EmbeddedResource Include="../../THIRD-PARTY-NOTICES.txt" LogicalName="OpExec.Licenses.ThirdPartyNotices.txt" />
   </ItemGroup>
 </Project>

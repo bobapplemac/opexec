@@ -10,6 +10,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <ProjectReference Include="../../src/OpExec/OpExec.csproj" />
+    <ProjectReference Include="../OpExec/OpExec.csproj" />
   </ItemGroup>
 </Project>
