@@ -47,7 +47,9 @@ ARG CONFIGURATION=Release
 RUN cd src && \
     dotnet test --solution OpExec.slnx \
         --configuration ${CONFIGURATION} \
-        --artifacts-path /artifacts
+        --artifacts-path /artifacts \
+        --output Detailed \
+        --progress off
 
 FROM source AS publish
 ARG CONFIGURATION=Release

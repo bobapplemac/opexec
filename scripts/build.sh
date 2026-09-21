@@ -135,7 +135,9 @@ run_dotnet() {
                 cd src
                 "$dotnet_command" test --solution OpExec.slnx \
                     --configuration "$configuration" \
-                    --artifacts-path "$artifacts_dir"
+                    --artifacts-path "$artifacts_dir" \
+                    --output Detailed \
+                    --progress off
             )
             ;;
         publish)

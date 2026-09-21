@@ -26,6 +26,8 @@ xUnit v3 test projects use its MTP v2 runner directly; supported Visual Studio
 versions discover them through Test Explorer's native Microsoft Testing Platform
 integration. The suite uses
 fake 1Password responses; it does not validate live account authentication.
+The Make workflow disables in-place progress rendering and prints every test
+result as an append-only console record so interactive and captured logs match.
 Linux-only installation and daemon-control tests are reported as skipped on
 Windows, and Unix-socket tests are reported as skipped when sockets are
 unavailable. Unix permission assertions are not exercised on Windows. Test
